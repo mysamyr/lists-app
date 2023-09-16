@@ -17,3 +17,7 @@ module.exports.STATUS = {
   BAD_REQUEST: 400,
   NOT_FOUND: 404
 };
+
+module.exports.ERROR_MESSAGES = {
+  NOT_VALID_ID: "Відісланий ідентифікатор не валідний",
+};

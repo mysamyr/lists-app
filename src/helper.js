@@ -1,41 +1,11 @@
 const path = require("path");
 const {ACTIONS} = require("./constants");
 
-const generateMeta = ({title, lang = "ua"}) => ([
-    `<html lang=${lang}>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-      <link rel="stylesheet" href="styles.css">
-      <title>${title}</title>
-    </head>
-    <body>
-    `,
-    `</body>
-    </html>
-    `
-  ]);
-
-const listMapper = ({name, capacity, count}) =>
-  `<p>${name} ${capacity}л. - ${count}</p>\n`;
-
-
 const sortByValue = (arr, key) => arr.sort((x, y) => {
   if (x[key] < y[key]) return -1;
   if (x[key] > y[key]) return 1;
   return 0;
 });
-
-const generateList = (list) => {
-  const [start, end] = generateMeta({title: "Список"});
-
-  const sortedList = sortByValue(list, "name");
-
-  const content = sortedList.map(listMapper).join("");
-  const backBtn = `<div class="btns"><a href="/" class="btn">Назад</a></div>`;
-
-  return [start, backBtn, content, end].join("");
-};
 
 const determineContentType = (url) => {
   const ext = path.extname(url);
@@ -59,20 +29,20 @@ const determineContentType = (url) => {
 
 const prepareAuditData = (action, data) => {
   let res;
-
+  // todo remove hardcoded values for create and delete
   switch (action) {
     case ACTIONS.CREATE:
       res = {
         name: data.name,
         before: "",
-        after: `${data.name} ${data.capacity} - ${data.count}`
+        after: `${data.name} ${data.capacity} - ${data.count}`,
       };
       break;
     case ACTIONS.RENAME:
       res = {
         name: data.updatedData.value.name,
         before: data.updatedData.value.name,
-        after: data.body.name
+        after: data.body.name,
       };
       break;
     case ACTIONS.CHANGE_NUMBER:
@@ -86,20 +56,40 @@ const prepareAuditData = (action, data) => {
       res = {
         name: data.name,
         before: `${data.name} ${data.capacity} - ${data.count}`,
-        after: ""
+        after: "",
       };
       break;
   }
-  res = {...res, id: data.id, action, date: new Date().toISOString()};
+  res = {...res, id: data.id, listId: data.listId, action, date: new Date().toISOString()};
   return res;
 };
 
 const mapAudits = (list) => list.map(({_id, ...data}) => data);
 
+const getView = (schema, data) => {
+  let result = "";
+  let field = null;
+  for (let l of schema) {
+    if (field !== null && l !== "}") {
+      field += l;
+    } else {
+      if (l === "{") {
+        field = "";
+      } else if (l === "}") {
+        result += data[field];
+        field = null;
+      } else {
+        result += l;
+      }
+    }
+  }
+  return result;
+};
+
 module.exports = {
-  generateList,
   determineContentType,
   sortByValue,
   prepareAuditData,
   mapAudits,
+  getView,
 };
