@@ -1,23 +1,23 @@
 module.exports.ACTIONS = {
-  CREATE: "create",
-  RENAME: "rename",
-  CHANGE_NUMBER: "change_number",
-  DELETE: "delete",
+	CREATE: "create",
+	RENAME: "rename",
+	CHANGE_NUMBER: "change_number",
+	DELETE: "delete",
 };
 
 module.exports.METHOD = {
-  GET: "GET",
-  POST: "POST",
-  PUT: "PUT",
-  DELETE: "DELETE",
+	GET: "GET",
+	POST: "POST",
+	PUT: "PUT",
+	DELETE: "DELETE",
 };
 
 module.exports.STATUS = {
-  OK: 200,
-  BAD_REQUEST: 400,
-  NOT_FOUND: 404
+	OK: 200,
+	BAD_REQUEST: 400,
+	NOT_FOUND: 404,
 };
 
 module.exports.ERROR_MESSAGES = {
-  NOT_VALID_ID: "Відісланий ідентифікатор не валідний",
+	NOT_VALID_ID: "Відісланий ідентифікатор не валідний",
 };
