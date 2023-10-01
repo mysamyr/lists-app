@@ -24,8 +24,15 @@ li {
 }
 p {
 	text-align: center;
+	margin: 0;
 }
-span {
+.details {
+	margin: 20px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.icon {
 	background-color: #fff;
 	padding: 6px 12px;
 	border-radius: 50%;
@@ -103,4 +110,8 @@ input {
 	padding: 5px;
 	border: none;
 	border-radius: 5px;
+}
+
+.completed {
+	text-decoration: line-through;
 }

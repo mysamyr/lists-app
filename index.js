@@ -23,7 +23,8 @@ const server = http.createServer(async (req, res) => {
 	await attachBody(req);
 	requestLogger(req);
 
-	// fields name and count have to be in every collection!
+	// field name has to be in every complex list!
+	// if field count is present - render inc/dec buttons in details for complex lists
 
 	await router.createRouter([
 		router.get("/", renderHome)(req),

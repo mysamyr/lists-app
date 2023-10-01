@@ -1,15 +1,15 @@
-const { ACTIONS } = require("./constants");
+const { ACTIONS, ERROR_MESSAGES } = require("./constants");
 const { getViewFields } = require("./helper");
 
 const validateFields = (fields) => {
 	const checkedSet = new Set();
 	for (let field of fields) {
 		if (
-			!field.hasOwnProperty("field") ||
-			typeof field.field !== "string" ||
-			!field.field.length
+			!field.hasOwnProperty("name") ||
+			typeof field.name !== "string" ||
+			!field.name.length
 		) {
-			throw new Error("Поле в схемі має містити поле field: string");
+			throw new Error("Поле в схемі має містити поле name: string");
 		}
 		if (
 			!field.hasOwnProperty("description") ||
@@ -26,6 +26,9 @@ const validateFields = (fields) => {
 			!field.type.length
 		) {
 			throw new Error("Поле в схемі має містити поле type: string (Тип поля)");
+		}
+		if (field.type !== "string" && field.type !== "number") {
+			throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 		if (
 			!field.hasOwnProperty("min") ||
@@ -46,54 +49,82 @@ const validateFields = (fields) => {
 				"Схема полів включає неправильний постфікс (postfix: string)",
 			);
 		}
-		if (checkedSet.has(field.field)) {
+		if (checkedSet.has(field.name)) {
 			throw new Error("Схема полів включає дублікати");
 		}
 
-		checkedSet.add(field.field);
+		checkedSet.add(field.name);
 	}
 };
 
 const isViewValid = (schema, fields) => {
 	const schemaItems = getViewFields(schema);
 	for (let field of schemaItems) {
-		if (fields.find((i) => i.field === field)) return false;
+		if (!fields.find((i) => i.name === field)) return false;
 	}
 	return true;
 };
 
-module.exports.validateCreateItem = (body, fields) => {
+module.exports.validateCreateItem = (
+	body,
+	{ type: listType, fields, data },
+) => {
 	if (!body) {
-		throw new Error("Відсутні дані для створення");
+		throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
 	}
-	fields.forEach(({ field, description, type, min, max }) => {
-		if (!body.hasOwnProperty(field)) {
-			throw new Error(`Відсутнє поле ${description}`);
+	if (listType === 1 || listType === 2) {
+		if (!body.hasOwnProperty("message")) {
+			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
 		}
-		const value = body[field];
-		if (
-			type === "string" &&
-			(typeof value !== "string" || value.length < min || value.length > max)
-		) {
-			throw new Error(
-				`Поле ${description} має бути рядком і включати від ${min} до ${max} символів`,
-			);
+		if (listType === 2 && !body.hasOwnProperty("complete")) {
+			throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
 		}
-		if (
-			type === "number" &&
-			(typeof value !== "number" || value < min || value > max)
-		) {
-			throw new Error(
-				`Поле ${description} має бути числом від ${min} до ${max}`,
-			);
+		const value = body.message;
+		if (typeof value !== "string" || value.length < 1 || value.length > 50) {
+			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
+		}
+		if (data.find((i) => i.message === value)) {
+			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+		}
+		return;
+	}
+	fields.forEach(({ name, description, type, min, max }) => {
+		if (!body.hasOwnProperty(name)) {
+			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE_(description));
+		}
+		const value = body[name];
+		switch (type) {
+			case "string":
+				if (
+					typeof value !== "string" ||
+					value.length < min ||
+					value.length > max
+				) {
+					throw new Error(
+						ERROR_MESSAGES.NOT_VALID_STRING_({ description, min, max }),
+					);
+				}
+				break;
+			case "number":
+				if (typeof value !== "number" || value < min || value > max) {
+					throw new Error(
+						ERROR_MESSAGES.NOT_VALID_NUMBER_({ description, min, max }),
+					);
+				}
+				break;
+			default:
+				throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 	});
 };
 
-module.exports.validateUpdateItem = (body) => {
+module.exports.validateUpdateItem = (body, { data }) => {
 	if (
 		!body ||
-		(!body.hasOwnProperty("count") && !body.hasOwnProperty("name"))
+		(!body.hasOwnProperty("count") &&
+			!body.hasOwnProperty("name") &&
+			!body.hasOwnProperty("message") &&
+			!body.hasOwnProperty("complete"))
 	) {
 		throw new Error("Відсутні дані");
 	}
@@ -109,15 +140,41 @@ module.exports.validateUpdateItem = (body) => {
 			body.name.length < 0 ||
 			body.name.length > 50
 		) {
-			throw new Error("Назва має включати від 0 до 50 символів");
+			throw new Error("Назва має включати від 1 до 50 символів");
 		}
 		return ACTIONS.RENAME;
+	}
+	if (body.hasOwnProperty("message")) {
+		if (
+			typeof body.message !== "string" ||
+			body.message.length < 0 ||
+			body.message.length > 50
+		) {
+			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
+		}
+		if (data.find((i) => i.message === body.message)) {
+			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+		}
+		return ACTIONS.CHANGE_MESSAGE;
+	}
+	if (body.hasOwnProperty("complete")) {
+		if (typeof body.complete !== "boolean") {
+			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
+		}
+		return ACTIONS.COMPLETE;
 	}
 };
 
 module.exports.validateCreateList = (body) => async (db) => {
+	// todo
 	if (!body) {
 		throw new Error("Відсутнє тіло запиту");
+	}
+	if (!body.hasOwnProperty("type") || typeof body.type !== "number") {
+		throw new Error("Відсутній тип списку");
+	}
+	if (body.type !== 1 && body.type !== 2 && body.type !== 3) {
+		throw new Error("Неправильний тип списку");
 	}
 	if (
 		!body.hasOwnProperty("name") ||
@@ -125,6 +182,18 @@ module.exports.validateCreateList = (body) => async (db) => {
 		!body.name.length
 	) {
 		throw new Error("Відсутня назва списку (name: string)");
+	}
+	if (body.name.length > 30) {
+		throw new Error("Назва списку занадто довга");
+	}
+	if (await db.getListByName(body.name)) {
+		throw new Error("Список з такою назвою вже існує");
+	}
+	if (body.type === 1 || body.type === 2) {
+		if (Object.keys(body).length > 2) {
+			throw new Error("Неправильні дані для створення списку");
+		}
+		return;
 	}
 	if (
 		!body.hasOwnProperty("view") ||
@@ -136,23 +205,34 @@ module.exports.validateCreateList = (body) => async (db) => {
 		);
 	}
 	if (
+		!body.hasOwnProperty("printView") ||
+		typeof body.printView !== "string" ||
+		!body.printView.length
+	) {
+		throw new Error(
+			"Відсутня схема відображення елементів списку (view: string)",
+		);
+	}
+	if (
+		!isViewValid(body.view, body.fields) ||
+		!isViewValid(body.printView, body.fields)
+	) {
+		throw new Error("Схема відображення включає неіснуючі поля");
+	}
+	if (
 		!body.hasOwnProperty("fields") ||
 		!Array.isArray(body.fields) ||
 		!body.fields?.length
 	) {
 		throw new Error("Відсутня схема полів списку (fields: object[])");
 	}
-	const { name, view, fields } = body;
-	if (await db.getListByName(name)) {
-		throw new Error("Список з такою назвою вже існує");
-	}
-	if (name.length > 30) {
-		throw new Error("Назва списку занадто довга");
-	}
-
-	validateFields(fields);
-
-	if (!isViewValid(view, fields)) {
-		throw new Error("Схема відображення включає неіснуючі поля");
+	validateFields(body.fields);
+	if (
+		body.hasOwnProperty("sort") &&
+		(typeof body.sort !== "string" ||
+			!body.sort.length ||
+			!body.fields.find((f) => f.name === body.sort))
+	) {
+		throw new Error("Неправильне поле для сортування");
 	}
 };

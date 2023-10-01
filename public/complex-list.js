@@ -25,8 +25,8 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	function validateCreationInputs(inputs, fields) {
 		const data = {};
-		for (let { field, description, type, min, max } of fields) {
-			let value = inputs[field];
+		for (let { name, description, type, min, max } of fields) {
+			let value = inputs[name];
 			if (
 				type === "string" &&
 				(typeof value !== "string" || value.length < min || value.length > max)
@@ -43,7 +43,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 					};
 				}
 			}
-			data[field] = value;
+			data[name] = value;
 		}
 		return { data };
 	}
@@ -59,26 +59,30 @@ window.addEventListener("DOMContentLoaded", async function () {
 	}
 
 	function renderDetails({ item, fields }) {
-		const lines = fields.map(
-			({ field, description, postfix }) =>
-				`<p>${description}: <b id="${field}">${item[field]}${
-					postfix || ""
-				}</b></p>`,
-		);
+		const lines = fields.map(({ name, description, postfix }) => {
+			const buttons =
+				name === "count"
+					? `<div class="btns">
+      <div id="dec" class="btn red">-</div>
+      <div id="inc" class="btn green">+</div>
+    </div>`
+					: "";
+			return `<p>${description}: <b id="${name}">${item[name]}${
+				postfix || ""
+			}</b></p>${buttons}`;
+		});
 		return `
-    ${lines.join("\n")}
-    <div class="btns">
-      <div class="btn red">-</div>
-      <div class="btn green">+</div>
-    </div>
-    <div class="btn">Закрити</div>`;
+		<div class="details">
+			${lines.join("\n")}
+		</div>
+    <div id="close" class="btn">Закрити</div>`;
 	}
 
 	function renderCreationForm(fields) {
 		const inputs = fields
 			.map(
-				({ field, description, type }) => `
-        <input name="${field}" type="${
+				({ name, description, type }) => `
+        <input name="${name}" type="${
 					type === "string" ? "text" : "number"
 				}" placeholder="${description}">
     `,
@@ -93,6 +97,73 @@ window.addEventListener("DOMContentLoaded", async function () {
       </div>
     </form>
     `;
+	}
+
+	async function saveListItem(details) {
+		const form = document.querySelector("form");
+		const inputs = getInputsFromForm(form);
+		const { data, error } = validateCreationInputs(inputs, details);
+		if (error) return alert(error);
+		await fetch(`/list/${listId}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		})
+			.then(async function (data) {
+				if (!data.ok) {
+					const res = await data.json();
+					throw new Error(res.error);
+				}
+				closeDialog();
+				location.href = `/list/${listId}`;
+			})
+			.catch(function (e) {
+				logError(e.message);
+				alert(e.message);
+			});
+	}
+
+	async function renameListItem(id, oldName) {
+		const name = document.querySelector("input");
+		const error = validateName(name.value, oldName);
+		if (error) return alert(error);
+		await fetch(`/list/${listId}/item/${id}`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ name: name.value }),
+		})
+			.then(async function (data) {
+				if (!data.ok) {
+					const res = await data.json();
+					throw new Error(res.error);
+				}
+				closeDialog();
+				location.href = `/list/${listId}`;
+			})
+			.catch(function (e) {
+				logError(e.message);
+				alert(e.message);
+			});
+	}
+
+	async function deleteListItem(id) {
+		await fetch(`/list/${listId}/item/${id}`, { method: "DELETE" })
+			.then(async function (data) {
+				if (!data.ok) {
+					const res = await data.json();
+					throw new Error(res.error);
+				}
+				location.href = `/list/${listId}`;
+			})
+			.catch(function (e) {
+				logError(e.message);
+				alert(e.message);
+			});
+		closeDialog();
 	}
 
 	async function changeCount(id, isAdd) {
@@ -131,17 +202,20 @@ window.addEventListener("DOMContentLoaded", async function () {
 					throw new Error(details.error);
 				}
 				dialog.innerHTML = renderDetails(details);
-				const [decBtn, incBtn, closeBtn] =
-					document.querySelectorAll("dialog .btn");
-				decBtn.addEventListener("click", async function () {
-					await changeCount(details.item.id, false);
-				});
-				incBtn.addEventListener("click", async function () {
-					await changeCount(details.item.id, true);
-				});
+				const closeBtn = document.getElementById("close");
+				const decBtn = document.getElementById("dec");
+				const incBtn = document.getElementById("inc");
 				closeBtn.addEventListener("click", function () {
 					closeDialog();
 				});
+				if (decBtn && incBtn) {
+					decBtn.addEventListener("click", async function () {
+						await changeCount(details.item.id, false);
+					});
+					incBtn.addEventListener("click", async function () {
+						await changeCount(details.item.id, true);
+					});
+				}
 				dialog.showModal();
 			})
 			.catch(function (e) {
@@ -162,33 +236,16 @@ window.addEventListener("DOMContentLoaded", async function () {
 				dialog.innerHTML = renderCreationForm(details);
 				const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
 				saveBtn.addEventListener("click", async function () {
-					const form = document.querySelector("form");
-					const inputs = getInputsFromForm(form);
-					const { data, error } = validateCreationInputs(inputs, details);
-					if (error) return alert(error);
-					await fetch(`/list/${listId}`, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
-						body: JSON.stringify(data),
-					})
-						.then(async function (data) {
-							if (!data.ok) {
-								const res = await data.json();
-								throw new Error(res.error);
-							}
-							closeDialog();
-							location.href = `/list/${listId}`;
-						})
-						.catch(function (e) {
-							logError(e.message);
-							alert(e.message);
-						});
+					return saveListItem(details);
 				});
 				closeBtn.addEventListener("click", function () {
 					closeDialog();
 				});
+				document
+					.querySelector("form")
+					.addEventListener("keydown", function (e) {
+						if (e.code === "Enter" && dialog.open) saveListItem(details);
+					});
 				dialog.showModal();
 			})
 			.catch(function (e) {
@@ -207,33 +264,17 @@ window.addEventListener("DOMContentLoaded", async function () {
       </div>
     </form>
     `;
-		const name = document.querySelector("input");
 		const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
 		saveBtn.addEventListener("click", async function () {
-			const error = validateName(name.value, oldName);
-			if (error) return alert(error);
-			await fetch(`/list/${listId}/item/${id}`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ name: name.value }),
-			})
-				.then(async function (data) {
-					if (!data.ok) {
-						const res = await data.json();
-						throw new Error(res.error);
-					}
-					closeDialog();
-					location.href = `/list/${listId}`;
-				})
-				.catch(function (e) {
-					logError(e.message);
-					alert(e.message);
-				});
+			return renameListItem(id, oldName);
 		});
 		closeBtn.addEventListener("click", function () {
 			closeDialog();
+		});
+		document.querySelector("form").addEventListener("keydown", function (e) {
+			if (e.code === "Enter" && dialog.open) {
+				return renameListItem(id, oldName);
+			}
 		});
 		dialog.showModal();
 	}
@@ -250,19 +291,7 @@ window.addEventListener("DOMContentLoaded", async function () {
     `;
 		const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
 		saveBtn.addEventListener("click", async function () {
-			await fetch(`/list/${listId}/item/${id}`, { method: "DELETE" })
-				.then(async function (data) {
-					if (!data.ok) {
-						const res = await data.json();
-						throw new Error(res.error);
-					}
-					location.href = `/list/${listId}`;
-				})
-				.catch(function (e) {
-					logError(e.message);
-					alert(e.message);
-				});
-			closeDialog();
+			return deleteListItem(id);
 		});
 		closeBtn.addEventListener("click", function () {
 			closeDialog();
@@ -274,15 +303,13 @@ window.addEventListener("DOMContentLoaded", async function () {
 		listItem.addEventListener("click", async function (e) {
 			const id = listItem.dataset.id;
 			const name = listItem.textContent.split(" ").slice(0, -1).join(" ");
-			if (e.target === listItem) {
-				return await openDetails(id);
-			}
 			if (e.target.id === "edit") {
 				return await openRename(id, name);
 			}
 			if (e.target.id === "delete") {
 				return await openDelete(id, name);
 			}
+			return await openDetails(id);
 		});
 	});
 	addItemBtn.addEventListener("click", async function () {
@@ -302,5 +329,6 @@ window.addEventListener("DOMContentLoaded", async function () {
 	});
 	dialog.addEventListener("keydown", function (e) {
 		if (e.code === "Escape" && dialog.open) closeDialog();
+		if (e.code === "Enter" && dialog.open) e.preventDefault();
 	});
 });

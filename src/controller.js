@@ -16,8 +16,10 @@ const { ACTIONS, STATUS, ERROR_MESSAGES } = require("./constants");
 const {
 	generateHome,
 	generatePrint,
-	generateList,
 	generate404,
+	generateComplexList,
+	generateSimpleList,
+	generateTodoList,
 } = require("./renderers");
 
 const getBody = async (request) => {
@@ -42,11 +44,13 @@ const getBody = async (request) => {
 module.exports.requestLogger = (req) => {
 	const body = req.body ? { body: req.body } : {};
 	// eslint-disable-next-line no-console
-	console.log({
-		method: req.method,
-		url: req.url,
-		...body,
-	});
+	console.log(
+		JSON.stringify({
+			method: req.method,
+			url: req.url,
+			...body,
+		}),
+	);
 };
 
 module.exports.attachBody = async (request) => {
@@ -82,7 +86,20 @@ module.exports.renderHome = async (req, res) => {
 
 module.exports.renderList = async (req, res) => {
 	const list = await db.getById(req.params.id);
-	const data = generateList(list);
+	let data;
+	switch (list.type) {
+		case 1:
+			data = generateSimpleList(list);
+			break;
+		case 2:
+			data = generateTodoList(list);
+			break;
+		case 3:
+			data = generateComplexList(list);
+			break;
+		default:
+			throw new Error(ERROR_MESSAGES.UNKNOWN_TYPE);
+	}
 	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
 	return res.end(data);
 };
@@ -123,7 +140,7 @@ module.exports.create = async (req, res) => {
 
 	const item = req.body;
 	const details = await db.getById(id);
-	await validateCreateItem(item, details.fields);
+	validateCreateItem(item, details);
 
 	const newId = new ObjectId();
 	await db.create(id, { id: newId, ...item });
@@ -141,13 +158,9 @@ module.exports.update = async (req, res) => {
 	}
 
 	const body = req.body;
-	const action = validateUpdateItem(body);
-	let updatedData;
-	if (action === ACTIONS.RENAME) {
-		updatedData = await db.updateName(listId, id, body.name);
-	} else if (action === ACTIONS.CHANGE_NUMBER) {
-		updatedData = await db.updateCount(listId, id, body.count);
-	}
+	const details = await db.getById(listId);
+	const action = validateUpdateItem(body, details);
+	let updatedData = await db.updateData(listId, id, body);
 	await db.createAudit(
 		prepareAuditData(action, { id, listId, body, updatedData }),
 	);
@@ -196,11 +209,9 @@ module.exports.createList = async (req, res) => {
 	await validateCreateList(item)(db);
 	await db.createList({
 		_id: new ObjectId(),
-		name: item.name,
-		view: item.view,
-		fields: item.fields,
 		data: [],
 		created: new Date().toJSON(),
+		...item,
 	});
 	res.writeHead(STATUS.OK);
 	return res.end();

@@ -1,14 +1,22 @@
 const path = require("path");
 const { ACTIONS } = require("./constants");
 
-const sortByValue = (arr, key) =>
+const getListItemString = (data) =>
+	Object.entries(data).reduce((acc, [key, value]) => {
+		if (key !== "id" && key !== "listId") {
+			acc += `${key} - ${value};`;
+		}
+		return acc;
+	}, "");
+
+module.exports.sortByValue = (arr, key) =>
 	arr.sort((x, y) => {
 		if (x[key] < y[key]) return -1;
 		if (x[key] > y[key]) return 1;
 		return 0;
 	});
 
-const determineContentType = (url) => {
+module.exports.determineContentType = (url) => {
 	const ext = path.extname(url);
 
 	let contentType;
@@ -28,15 +36,14 @@ const determineContentType = (url) => {
 	return contentType;
 };
 
-const prepareAuditData = (action, data) => {
+module.exports.prepareAuditData = (action, data) => {
 	let res;
-	// todo remove hardcoded values for create and delete
 	switch (action) {
 		case ACTIONS.CREATE:
 			res = {
 				name: data.name,
 				before: "",
-				after: `${data.name} ${data.capacity} - ${data.count}`,
+				after: getListItemString(data),
 			};
 			break;
 		case ACTIONS.RENAME:
@@ -53,10 +60,24 @@ const prepareAuditData = (action, data) => {
 				after: data.body.count,
 			};
 			break;
+		case ACTIONS.CHANGE_MESSAGE:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.message,
+				after: data.body.message,
+			};
+			break;
+		case ACTIONS.COMPLETE:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.complete,
+				after: data.body.complete,
+			};
+			break;
 		case ACTIONS.DELETE:
 			res = {
 				name: data.name,
-				before: `${data.name} ${data.capacity} - ${data.count}`,
+				before: getListItemString(data),
 				after: "",
 			};
 			break;
@@ -71,9 +92,10 @@ const prepareAuditData = (action, data) => {
 	return res;
 };
 // eslint-disable-next-line no-unused-vars
-const mapAudits = (list) => list.map(({ _id, ...data }) => data);
+module.exports.mapAudits = (list) => list.map(({ _id, ...data }) => data);
 
-const getView = (schema, data) => {
+module.exports.getView = (data, schema) => {
+	if (!schema) return data.message;
 	let result = "";
 	let field = null;
 	for (let l of schema) {
@@ -93,7 +115,7 @@ const getView = (schema, data) => {
 	return result;
 };
 
-const getViewFields = (schema) => {
+module.exports.getViewFields = (schema) => {
 	let result = [];
 	let field = null;
 	for (let l of schema) {
@@ -111,13 +133,4 @@ const getViewFields = (schema) => {
 		}
 	}
 	return result;
-};
-
-module.exports = {
-	determineContentType,
-	sortByValue,
-	prepareAuditData,
-	mapAudits,
-	getView,
-	getViewFields,
 };

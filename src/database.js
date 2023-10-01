@@ -2,13 +2,14 @@ const { ObjectId, MongoClient } = require("mongodb");
 const { MONGODB_URI } = require("../config");
 
 const client = new MongoClient(MONGODB_URI);
-const connection = {};
+const connection = (module.exports.connection = {});
 
 module.exports.connect = async () => {
 	await client.connect();
 	const db = client.db("house");
 	connection.lists = db.collection("lists");
 	connection.audits = db.collection("audits");
+	connection.close = () => client.close(true);
 };
 
 module.exports.getAll = async () => {
@@ -31,20 +32,14 @@ module.exports.create = async (id, item) => {
 	);
 };
 
-module.exports.updateName = async (id, itemId, data) => {
+module.exports.updateData = async (id, itemId, data) => {
+	const updateData = Object.entries(data).reduce((acc, [key, value]) => {
+		acc[`data.$[listItem].${key}`] = value;
+		return acc;
+	}, {});
 	return connection.lists.findOneAndUpdate(
 		{ _id: new ObjectId(id) },
-		{ $set: { "data.$[listItem].name": data } },
-		{
-			arrayFilters: [{ "listItem.id": new ObjectId(itemId) }],
-		},
-	);
-};
-
-module.exports.updateCount = async (id, itemId, data) => {
-	return connection.lists.findOneAndUpdate(
-		{ _id: new ObjectId(id) },
-		{ $set: { "data.$[listItem].count": data } },
+		{ $set: updateData },
 		{
 			arrayFilters: [{ "listItem.id": new ObjectId(itemId) }],
 		},
