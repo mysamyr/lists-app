@@ -1,0 +1,9 @@
+? make unique combinations for 3 lists. Think how to implement
+
+add create and rename features for lists (not list-items)
+
+refactoring client`s scripts (common logic)
+
+declare all error messages and constants
+
+add possibility to not show some fields (fields.show: bool)

@@ -1,95 +1,136 @@
 const path = require("path");
-const {ACTIONS} = require("./constants");
+const { ACTIONS } = require("./constants");
 
-const sortByValue = (arr, key) => arr.sort((x, y) => {
-  if (x[key] < y[key]) return -1;
-  if (x[key] > y[key]) return 1;
-  return 0;
-});
+const getListItemString = (data) =>
+	Object.entries(data).reduce((acc, [key, value]) => {
+		if (key !== "id" && key !== "listId") {
+			acc += `${key} - ${value};`;
+		}
+		return acc;
+	}, "");
 
-const determineContentType = (url) => {
-  const ext = path.extname(url);
+module.exports.sortByValue = (arr, key) =>
+	arr.sort((x, y) => {
+		if (x[key] < y[key]) return -1;
+		if (x[key] > y[key]) return 1;
+		return 0;
+	});
 
-  let contentType;
-  switch (ext) {
-    case ".css":
-      contentType = "text/css";
-      break;
-    case ".js":
-      contentType = "text/javascript";
-      break;
-    case ".ico":
-      contentType = "image/x-icon";
-      break;
-    default:
-      contentType = "text/html";
-  }
-  return contentType;
+module.exports.determineContentType = (url) => {
+	const ext = path.extname(url);
+
+	let contentType;
+	switch (ext) {
+		case ".css":
+			contentType = "text/css";
+			break;
+		case ".js":
+			contentType = "text/javascript";
+			break;
+		case ".ico":
+			contentType = "image/x-icon";
+			break;
+		default:
+			contentType = "text/html";
+	}
+	return contentType;
 };
 
-const prepareAuditData = (action, data) => {
-  let res;
-  // todo remove hardcoded values for create and delete
-  switch (action) {
-    case ACTIONS.CREATE:
-      res = {
-        name: data.name,
-        before: "",
-        after: `${data.name} ${data.capacity} - ${data.count}`,
-      };
-      break;
-    case ACTIONS.RENAME:
-      res = {
-        name: data.updatedData.value.name,
-        before: data.updatedData.value.name,
-        after: data.body.name,
-      };
-      break;
-    case ACTIONS.CHANGE_NUMBER:
-      res = {
-        name: data.updatedData.value.name,
-        before: data.updatedData.value.count,
-        after: data.body.count,
-      };
-      break;
-    case ACTIONS.DELETE:
-      res = {
-        name: data.name,
-        before: `${data.name} ${data.capacity} - ${data.count}`,
-        after: "",
-      };
-      break;
-  }
-  res = {...res, id: data.id, listId: data.listId, action, date: new Date().toISOString()};
-  return res;
+module.exports.prepareAuditData = (action, data) => {
+	let res;
+	switch (action) {
+		case ACTIONS.CREATE:
+			res = {
+				name: data.name,
+				before: "",
+				after: getListItemString(data),
+			};
+			break;
+		case ACTIONS.RENAME:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.name,
+				after: data.body.name,
+			};
+			break;
+		case ACTIONS.CHANGE_NUMBER:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.count,
+				after: data.body.count,
+			};
+			break;
+		case ACTIONS.CHANGE_MESSAGE:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.message,
+				after: data.body.message,
+			};
+			break;
+		case ACTIONS.COMPLETE:
+			res = {
+				name: data.updatedData.value.name,
+				before: data.updatedData.value.complete,
+				after: data.body.complete,
+			};
+			break;
+		case ACTIONS.DELETE:
+			res = {
+				name: data.name,
+				before: getListItemString(data),
+				after: "",
+			};
+			break;
+	}
+	res = {
+		...res,
+		id: data.id,
+		listId: data.listId,
+		action,
+		date: new Date().toISOString(),
+	};
+	return res;
+};
+// eslint-disable-next-line no-unused-vars
+module.exports.mapAudits = (list) => list.map(({ _id, ...data }) => data);
+
+module.exports.getView = (data, schema) => {
+	if (!schema) return data.message;
+	let result = "";
+	let field = null;
+	for (let l of schema) {
+		if (field !== null && l !== "}") {
+			field += l;
+		} else {
+			if (l === "{") {
+				field = "";
+			} else if (l === "}") {
+				result += data[field];
+				field = null;
+			} else {
+				result += l;
+			}
+		}
+	}
+	return result;
 };
 
-const mapAudits = (list) => list.map(({_id, ...data}) => data);
-
-const getView = (schema, data) => {
-  let result = "";
-  let field = null;
-  for (let l of schema) {
-    if (field !== null && l !== "}") {
-      field += l;
-    } else {
-      if (l === "{") {
-        field = "";
-      } else if (l === "}") {
-        result += data[field];
-        field = null;
-      } else {
-        result += l;
-      }
-    }
-  }
-  return result;
-};
-
-module.exports = {
-  determineContentType,
-  sortByValue,
-  prepareAuditData,
-  mapAudits,
-  getView,
+module.exports.getViewFields = (schema) => {
+	let result = [];
+	let field = null;
+	for (let l of schema) {
+		if (field !== null && l !== "}") {
+			field += l;
+		} else {
+			if (l === "{") {
+				field = "";
+			} else if (l === "}") {
+				result.push(field);
+				field = null;
+			} else {
+				result += l;
+			}
+		}
+	}
+	return result;
 };
