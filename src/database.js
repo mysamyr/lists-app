@@ -1,12 +1,12 @@
 const { ObjectId, MongoClient } = require("mongodb");
-const { MONGODB_URI } = require("../config");
+const { MONGODB_URI, MONGODB_DB_NAME } = require("../config");
 
 const client = new MongoClient(MONGODB_URI);
 const connection = (module.exports.connection = {});
 
 module.exports.connect = async () => {
 	await client.connect();
-	const db = client.db("house");
+	const db = client.db(MONGODB_DB_NAME);
 	connection.lists = db.collection("lists");
 	connection.audits = db.collection("audits");
 	connection.close = () => client.close(true);

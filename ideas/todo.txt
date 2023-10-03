@@ -7,3 +7,5 @@ refactoring client`s scripts (common logic)
 declare all error messages and constants
 
 add possibility to not show some fields (fields.show: bool)
+
+add authorisation

@@ -53,7 +53,7 @@ module.exports.generateHome = (list) => {
 
 module.exports.generateSimpleList = (list) => {
 	const [start, end] = generateMeta({
-		title: "Список",
+		title: list.name,
 		stylesheets: ["styles.css"],
 		scripts: ["simple-list.js"],
 	});
@@ -81,7 +81,7 @@ module.exports.generateSimpleList = (list) => {
 };
 module.exports.generateTodoList = (list) => {
 	const [start, end] = generateMeta({
-		title: "Список",
+		title: list.name,
 		stylesheets: ["styles.css"],
 		scripts: ["todo-list.js"],
 	});
@@ -109,7 +109,7 @@ module.exports.generateTodoList = (list) => {
 };
 module.exports.generateComplexList = (list) => {
 	const [start, end] = generateMeta({
-		title: "Список",
+		title: list.name,
 		stylesheets: ["styles.css"],
 		scripts: ["complex-list.js"],
 	});
@@ -171,7 +171,7 @@ module.exports.generate404 = () => {
 	});
 
 	const header = generateHeader(`Сторінка не знайдена`);
-	const backBtn = `<a href="/" class="btn">Назад</a>`;
+	const backBtn = `<a href="/" class="btn">На головну</a>`;
 
 	return [start, header, backBtn, end].join("");
 };

@@ -12,7 +12,7 @@ const {
 	validateUpdateItem,
 	validateCreateList,
 } = require("./validators");
-const { ACTIONS, STATUS, ERROR_MESSAGES } = require("./constants");
+const { ACTIONS, STATUS, ERROR_MESSAGES, LIST_TYPES } = require("./constants");
 const {
 	generateHome,
 	generatePrint,
@@ -21,6 +21,7 @@ const {
 	generateSimpleList,
 	generateTodoList,
 } = require("./renderers");
+const { CONTENT_TYPE } = require("./enums");
 
 const getBody = async (request) => {
 	return await new Promise((resolve, reject) => {
@@ -70,17 +71,17 @@ module.exports.renderFile = (req, res) => {
 		return res.end(data);
 	} catch (err) {
 		if (err.code === "ENOENT") {
-			res.writeHead(STATUS.NOT_FOUND, { "Content-Type": "text/html" });
+			res.writeHead(STATUS.NOT_FOUND, CONTENT_TYPE.PLAIN);
 			return res.end(generate404());
 		}
-		throw new Error("Internal Server Error");
+		throw new Error(ERROR_MESSAGES.INTERNAL_SERVER_ERROR);
 	}
 };
 
 module.exports.renderHome = async (req, res) => {
 	const list = await db.getAll();
 	const data = generateHome(list);
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
 	return res.end(data);
 };
 
@@ -88,19 +89,19 @@ module.exports.renderList = async (req, res) => {
 	const list = await db.getById(req.params.id);
 	let data;
 	switch (list.type) {
-		case 1:
+		case LIST_TYPES.SIMPLE:
 			data = generateSimpleList(list);
 			break;
-		case 2:
+		case LIST_TYPES.TODO:
 			data = generateTodoList(list);
 			break;
-		case 3:
+		case LIST_TYPES.COMPLEX:
 			data = generateComplexList(list);
 			break;
 		default:
 			throw new Error(ERROR_MESSAGES.UNKNOWN_TYPE);
 	}
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
 	return res.end(data);
 };
 
@@ -112,7 +113,7 @@ module.exports.getDetails = async (req, res) => {
 
 	const details = await db.getById(listId);
 	const item = details.data.find((i) => i.id.toString() === id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end(
 		JSON.stringify({
 			item,
@@ -128,7 +129,7 @@ module.exports.getFields = async (req, res) => {
 	}
 
 	const data = await db.getById(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end(JSON.stringify(data.fields));
 };
 
@@ -164,7 +165,7 @@ module.exports.update = async (req, res) => {
 	await db.createAudit(
 		prepareAuditData(action, { id, listId, body, updatedData }),
 	);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end();
 };
 
@@ -189,7 +190,7 @@ module.exports.print = async (req, res) => {
 	}
 
 	const list = await db.getById(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
 	return res.end(generatePrint(list));
 };
 
@@ -200,7 +201,7 @@ module.exports.audits = async (req, res) => {
 	}
 
 	const audits = await db.getHistory(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end(JSON.stringify(mapAudits(audits)));
 };
 

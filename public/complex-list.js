@@ -1,3 +1,6 @@
+const NAME_MIN_LENGTH = 3;
+const NAME_MAX_LENGTH = 50;
+
 window.addEventListener("DOMContentLoaded", async function () {
 	const listId = location.pathname.split("/")[2];
 	const list = document.querySelectorAll("li");
@@ -15,11 +18,15 @@ window.addEventListener("DOMContentLoaded", async function () {
 	}
 
 	function validateName(name, oldName) {
-		if (!name || name.length < 1 || name.length > 50) {
-			return "Назва має включати від 0 до 50 символів";
+		if (
+			!name ||
+			name.length < NAME_MIN_LENGTH ||
+			name.length > NAME_MAX_LENGTH
+		) {
+			return `Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`;
 		}
 		if (oldName && name === oldName) {
-			return "Назва має включати від 0 до 50 символів";
+			return "Новий елемент не змінився";
 		}
 	}
 
@@ -257,7 +264,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 	async function openRename(id, oldName) {
 		dialog.innerHTML = `
     <form>
-      <input type="text" max="50" value="${oldName}">
+      <input type="text" max="${NAME_MAX_LENGTH}" value="${oldName}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
         <div class="btn red">Скасувати</div>

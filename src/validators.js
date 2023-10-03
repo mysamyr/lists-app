@@ -1,48 +1,56 @@
-const { ACTIONS, ERROR_MESSAGES } = require("./constants");
+const {
+	ACTIONS,
+	ERROR_MESSAGES,
+	MESSAGE_MIN_LENGTH,
+	MESSAGE_MAX_LENGTH,
+	LISTNAME_MIN_LENGTH,
+	LISTNAME_MAX_LENGTH,
+	FIELDS,
+	FIELD_TYPES,
+	LIST_TYPES,
+} = require("./constants");
 const { getViewFields } = require("./helper");
 
 const validateFields = (fields) => {
 	const checkedSet = new Set();
 	for (let field of fields) {
 		if (
-			!field.hasOwnProperty("name") ||
-			typeof field.name !== "string" ||
+			!field.hasOwnProperty(FIELDS.NAME) ||
+			typeof field.name !== FIELD_TYPES.STRING ||
 			!field.name.length
 		) {
-			throw new Error("Поле в схемі має містити поле name: string");
+			throw new Error("Схема має містити поле name: string");
 		}
 		if (
-			!field.hasOwnProperty("description") ||
-			typeof field.description !== "string" ||
+			!field.hasOwnProperty(FIELDS.DESCRIPTION) ||
+			typeof field.description !== FIELD_TYPES.STRING ||
 			!field.description.length
 		) {
-			throw new Error(
-				"Поле в схемі має містити поле description: string (Опис)",
-			);
+			throw new Error("Схема має містити поле description: string (Опис)");
 		}
 		if (
-			!field.hasOwnProperty("type") ||
-			typeof field.type !== "string" ||
+			!field.hasOwnProperty(FIELDS.TYPE) ||
+			typeof field.type !== FIELD_TYPES.STRING ||
 			!field.type.length
 		) {
-			throw new Error("Поле в схемі має містити поле type: string (Тип поля)");
+			throw new Error("Схема має містити поле type: string (Тип поля)");
 		}
-		if (field.type !== "string" && field.type !== "number") {
+		if (field.type !== "string" && field.type !== FIELD_TYPES.NUMBER) {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 		if (
-			!field.hasOwnProperty("min") ||
-			typeof field.min !== "number" ||
-			!field.hasOwnProperty("max") ||
-			typeof field.max !== "number"
+			!field.hasOwnProperty(FIELDS.MIN) ||
+			typeof field.min !== FIELD_TYPES.NUMBER ||
+			!field.hasOwnProperty(FIELDS.MAX) ||
+			typeof field.max !== FIELD_TYPES.NUMBER
 		) {
 			throw new Error(
-				"Поле в схемі має містити обмеження (min: number & max: number)",
+				"Схема має містити обмеження (min: number & max: number)",
 			);
 		}
 		if (
-			field.hasOwnProperty("postfix") &&
-			typeof field.postfix !== "string" &&
+			field.hasOwnProperty(FIELDS.POSTFIX) &&
+			typeof field.postfix !== FIELD_TYPES.STRING &&
 			!field.postfix.length
 		) {
 			throw new Error(
@@ -72,18 +80,22 @@ module.exports.validateCreateItem = (
 	if (!body) {
 		throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
 	}
-	if (listType === 1 || listType === 2) {
-		if (!body.hasOwnProperty("message")) {
+	if (listType === LIST_TYPES.SIMPLE || listType === LIST_TYPES.TODO) {
+		if (!body.hasOwnProperty(FIELDS.MESSAGE)) {
 			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
 		}
-		if (listType === 2 && !body.hasOwnProperty("complete")) {
+		if (listType === LIST_TYPES.TODO && !body.hasOwnProperty(FIELDS.COMPLETE)) {
 			throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
 		}
-		const value = body.message;
-		if (typeof value !== "string" || value.length < 1 || value.length > 50) {
+		const message = body.message;
+		if (
+			typeof message !== FIELD_TYPES.STRING ||
+			message.length < MESSAGE_MIN_LENGTH ||
+			message.length > MESSAGE_MAX_LENGTH
+		) {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
 		}
-		if (data.find((i) => i.message === value)) {
+		if (data.find((i) => i.message === message)) {
 			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
 		}
 		return;
@@ -94,9 +106,9 @@ module.exports.validateCreateItem = (
 		}
 		const value = body[name];
 		switch (type) {
-			case "string":
+			case FIELD_TYPES.STRING:
 				if (
-					typeof value !== "string" ||
+					typeof value !== FIELD_TYPES.STRING ||
 					value.length < min ||
 					value.length > max
 				) {
@@ -105,8 +117,8 @@ module.exports.validateCreateItem = (
 					);
 				}
 				break;
-			case "number":
-				if (typeof value !== "number" || value < min || value > max) {
+			case FIELD_TYPES.NUMBER:
+				if (typeof value !== FIELD_TYPES.NUMBER || value < min || value > max) {
 					throw new Error(
 						ERROR_MESSAGES.NOT_VALID_NUMBER_({ description, min, max }),
 					);
@@ -121,34 +133,36 @@ module.exports.validateCreateItem = (
 module.exports.validateUpdateItem = (body, { data }) => {
 	if (
 		!body ||
-		(!body.hasOwnProperty("count") &&
-			!body.hasOwnProperty("name") &&
-			!body.hasOwnProperty("message") &&
-			!body.hasOwnProperty("complete"))
+		(!body.hasOwnProperty(FIELDS.COUNT) &&
+			!body.hasOwnProperty(FIELDS.NAME) &&
+			!body.hasOwnProperty(FIELDS.MESSAGE) &&
+			!body.hasOwnProperty(FIELDS.COMPLETE))
 	) {
 		throw new Error("Відсутні дані");
 	}
-	if (body.hasOwnProperty("count")) {
-		if (typeof body.count !== "number" || body.count < 0) {
+	if (body.hasOwnProperty(FIELDS.COUNT)) {
+		if (typeof body.count !== FIELD_TYPES.NUMBER || body.count < 0) {
 			throw new Error("Кількість не може бути від'ємна");
 		}
 		return ACTIONS.CHANGE_NUMBER;
 	}
-	if (body.hasOwnProperty("name")) {
+	if (body.hasOwnProperty(FIELDS.NAME)) {
 		if (
-			typeof body.name !== "string" ||
-			body.name.length < 0 ||
-			body.name.length > 50
+			typeof body.name !== FIELD_TYPES.STRING ||
+			body.name.length < MESSAGE_MIN_LENGTH ||
+			body.name.length > MESSAGE_MAX_LENGTH
 		) {
-			throw new Error("Назва має включати від 1 до 50 символів");
+			throw new Error(
+				`Назва має включати від ${MESSAGE_MIN_LENGTH} до ${MESSAGE_MAX_LENGTH} символів`,
+			);
 		}
 		return ACTIONS.RENAME;
 	}
-	if (body.hasOwnProperty("message")) {
+	if (body.hasOwnProperty(FIELDS.MESSAGE)) {
 		if (
-			typeof body.message !== "string" ||
-			body.message.length < 0 ||
-			body.message.length > 50
+			typeof body.message !== FIELD_TYPES.STRING ||
+			body.message.length < MESSAGE_MIN_LENGTH ||
+			body.message.length > MESSAGE_MAX_LENGTH
 		) {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
 		}
@@ -157,8 +171,8 @@ module.exports.validateUpdateItem = (body, { data }) => {
 		}
 		return ACTIONS.CHANGE_MESSAGE;
 	}
-	if (body.hasOwnProperty("complete")) {
-		if (typeof body.complete !== "boolean") {
+	if (body.hasOwnProperty(FIELDS.COMPLETE)) {
+		if (typeof body.complete !== FIELD_TYPES.BOOLEAN) {
 			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
 		}
 		return ACTIONS.COMPLETE;
@@ -166,38 +180,48 @@ module.exports.validateUpdateItem = (body, { data }) => {
 };
 
 module.exports.validateCreateList = (body) => async (db) => {
-	// todo
 	if (!body) {
 		throw new Error("Відсутнє тіло запиту");
 	}
-	if (!body.hasOwnProperty("type") || typeof body.type !== "number") {
+	if (
+		!body.hasOwnProperty(FIELDS.TYPE) ||
+		typeof body.type !== FIELD_TYPES.NUMBER
+	) {
 		throw new Error("Відсутній тип списку");
 	}
-	if (body.type !== 1 && body.type !== 2 && body.type !== 3) {
+	if (
+		body.type !== LIST_TYPES.SIMPLE &&
+		body.type !== LIST_TYPES.TODO &&
+		body.type !== LIST_TYPES.COMPLEX
+	) {
 		throw new Error("Неправильний тип списку");
 	}
 	if (
-		!body.hasOwnProperty("name") ||
-		typeof body.name !== "string" ||
-		!body.name.length
+		!body.hasOwnProperty(FIELDS.NAME) ||
+		typeof body.name !== FIELD_TYPES.STRING
 	) {
 		throw new Error("Відсутня назва списку (name: string)");
 	}
-	if (body.name.length > 30) {
-		throw new Error("Назва списку занадто довга");
+	if (
+		body.name.length < LISTNAME_MIN_LENGTH ||
+		body.name.length > LISTNAME_MAX_LENGTH
+	) {
+		throw new Error(
+			`Назва списку має включати від ${LISTNAME_MIN_LENGTH} до ${LISTNAME_MAX_LENGTH} символів`,
+		);
 	}
 	if (await db.getListByName(body.name)) {
 		throw new Error("Список з такою назвою вже існує");
 	}
-	if (body.type === 1 || body.type === 2) {
+	if (body.type === LIST_TYPES.SIMPLE || body.type === LIST_TYPES.TODO) {
 		if (Object.keys(body).length > 2) {
 			throw new Error("Неправильні дані для створення списку");
 		}
 		return;
 	}
 	if (
-		!body.hasOwnProperty("view") ||
-		typeof body.view !== "string" ||
+		!body.hasOwnProperty(FIELDS.VIEW) ||
+		typeof body.view !== FIELD_TYPES.STRING ||
 		!body.view.length
 	) {
 		throw new Error(
@@ -205,8 +229,8 @@ module.exports.validateCreateList = (body) => async (db) => {
 		);
 	}
 	if (
-		!body.hasOwnProperty("printView") ||
-		typeof body.printView !== "string" ||
+		!body.hasOwnProperty(FIELDS.PRINT_VIEW) ||
+		typeof body.printView !== FIELD_TYPES.STRING ||
 		!body.printView.length
 	) {
 		throw new Error(
@@ -220,7 +244,7 @@ module.exports.validateCreateList = (body) => async (db) => {
 		throw new Error("Схема відображення включає неіснуючі поля");
 	}
 	if (
-		!body.hasOwnProperty("fields") ||
+		!body.hasOwnProperty(FIELDS.FIELDS) ||
 		!Array.isArray(body.fields) ||
 		!body.fields?.length
 	) {
@@ -228,8 +252,8 @@ module.exports.validateCreateList = (body) => async (db) => {
 	}
 	validateFields(body.fields);
 	if (
-		body.hasOwnProperty("sort") &&
-		(typeof body.sort !== "string" ||
+		body.hasOwnProperty(FIELDS.SORT) &&
+		(typeof body.sort !== FIELD_TYPES.STRING ||
 			!body.sort.length ||
 			!body.fields.find((f) => f.name === body.sort))
 	) {
