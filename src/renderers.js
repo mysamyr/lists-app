@@ -24,9 +24,12 @@ const generateMeta = ({
 ];
 const generateHeader = (text) => `<h1>${text}</h1>`;
 
+const addBtn = `<div class="add-item">+</div>`;
 const dialog = `<dialog></dialog>`;
+const noContent = `<p>Немає нічого</p>`;
 
-const listMapper = ({ name, id }) => `<li data-id="${id}">${name}</li>`;
+const listMapper = ({ name, id }) =>
+	`<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
 const listItemMapper = (data, schema) =>
 	`<li data-id="${data.id}"><span class="${
 		data.complete ? "completed" : ""
@@ -43,12 +46,19 @@ module.exports.generateHome = (list) => {
 		scripts: ["home.js"],
 	});
 
-	const sortedList = sortByValue(list, "name");
+	const sortedList = sortByValue(list);
 
 	const header = generateHeader("Списки");
-	const content = sortedList.map(listMapper).join("\n");
+	const content = sortedList.map(listMapper);
 
-	return [start, header, "<ul>", content, "</ul>", end].join("");
+	return [
+		start,
+		header,
+		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
+		addBtn,
+		dialog,
+		end,
+	].join("");
 };
 
 module.exports.generateSimpleList = (list) => {
@@ -63,7 +73,6 @@ module.exports.generateSimpleList = (list) => {
 	const header = generateHeader(`<b>${list.name}</b>`);
 	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const content = sortedList.map((i) => listItemMapper(i));
-	const addBtn = `<div class="add-item">+</div>`;
 
 	return [
 		start,
@@ -71,9 +80,7 @@ module.exports.generateSimpleList = (list) => {
 		header,
 		backBtn,
 		`</div>`,
-		"<ul>",
-		content.join("\n"),
-		"</ul>",
+		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
 		addBtn,
 		dialog,
 		end,
@@ -86,12 +93,11 @@ module.exports.generateTodoList = (list) => {
 		scripts: ["todo-list.js"],
 	});
 
-	const sortedList = sortByValue(list.data, "name");
+	const sortedList = sortByValue(list.data);
 
 	const header = generateHeader(`<b>${list.name}</b>`);
 	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const content = sortedList.map((i) => listItemMapper(i));
-	const addBtn = `<div class="add-item">+</div>`;
 
 	return [
 		start,
@@ -99,9 +105,7 @@ module.exports.generateTodoList = (list) => {
 		header,
 		backBtn,
 		`</div>`,
-		"<ul>",
-		content.join("\n"),
-		"</ul>",
+		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
 		addBtn,
 		dialog,
 		end,
@@ -114,17 +118,14 @@ module.exports.generateComplexList = (list) => {
 		scripts: ["complex-list.js"],
 	});
 
-	const sortedList = sortByValue(list.data, list.sort || "name");
+	const sortedList = sortByValue(list.data, list.sort);
 
 	const header = generateHeader(`<b>${list.name}</b>`);
 	const backBtn = `<a href="/" class="btn">Назад</a>`;
-	const content = sortedList
-		.map((i) => listItemMapper(i, list.view))
-		.join("\n");
+	const content = sortedList.map((i) => listItemMapper(i, list.view));
 	const btns = `<div class="btns">
         <a href="/list/${list._id.toString()}/print" class="btn print">Показати список</a>
     </div>`;
-	const addBtn = `<div class="add-item">+</div>`;
 
 	return [
 		start,
@@ -132,26 +133,23 @@ module.exports.generateComplexList = (list) => {
 		header,
 		backBtn,
 		`</div>`,
-		"<ul>",
-		content,
-		"</ul>",
-		btns,
+		content.length ? `<ul>${content.join("\n")}</ul>${btns}` : noContent,
 		addBtn,
 		dialog,
 		end,
 	].join("");
 };
 
-module.exports.generatePrint = ({ data, name, _id, printView }) => {
+module.exports.generatePrint = ({ data, name, _id, printView, sort }) => {
 	const [start, end] = generateMeta({
 		title: "Список",
 		stylesheets: ["styles.css"],
 	});
 
-	const sortedList = sortByValue(data, "name");
+	const sortedList = sortByValue(data, sort);
 
 	const header = generateHeader(`<b>${name}</b>`);
-	const content = sortedList.map((i) => printMapper(i, printView));
+	const content = sortedList.map((i) => printMapper(i, printView)).join("\n");
 	const backBtn = `<a href="/list/${_id.toString()}" class="btn">Назад</a>`;
 
 	return [
@@ -160,7 +158,7 @@ module.exports.generatePrint = ({ data, name, _id, printView }) => {
 		header,
 		backBtn,
 		`</div>`,
-		content.join("\n"),
+		content,
 		end,
 	].join("");
 };
@@ -170,7 +168,7 @@ module.exports.generate404 = () => {
 		title: "Сторінка не знайдена",
 	});
 
-	const header = generateHeader(`Сторінка не знайдена`);
+	const header = generateHeader("Сторінка не знайдена");
 	const backBtn = `<a href="/" class="btn">На головну</a>`;
 
 	return [start, header, backBtn, end].join("");

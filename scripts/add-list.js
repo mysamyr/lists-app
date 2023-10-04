@@ -4,7 +4,7 @@ const { validateCreateList } = require("../src/validators");
 
 // 1 - simple list, 2 - todo list, 3 - complex list
 const type = 3;
-const name = "Complex list";
+const name = "Test Jars";
 const fieldSchema = [
 	{
 		name: "name",
@@ -14,17 +14,23 @@ const fieldSchema = [
 		max: 30,
 	},
 	{
-		name: "weight",
-		description: "Вага",
+		name: "capacity",
+		description: "Банка",
+		type: "number",
+		min: 0.1,
+		max: 3,
+	},
+	{
+		name: "count",
+		description: "Кількість",
 		type: "number",
 		min: 0,
-		max: 999,
+		max: 99,
 	},
 ];
-const renderViewSchema = "{name}";
-const sort = {
-	sort: "weight",
-}; // empty for sorting by name
+const renderViewSchema = "{name} {capacity}л";
+const printViewSchema = "{name} {capacity}л. - {count}шт.";
+const sort = {}; // empty for sorting by name
 
 (async () => {
 	await db.connect();
@@ -52,8 +58,10 @@ const sort = {
 
 	await validateCreateList({
 		name,
+		type,
 		fields: fieldSchema,
 		view: renderViewSchema,
+		printView: printViewSchema,
 	})(db);
 
 	await db.connection.lists.insertOne({
@@ -64,10 +72,11 @@ const sort = {
 		data: [],
 		created: new Date().toJSON(),
 		view: renderViewSchema,
+		printView: printViewSchema,
 		...sort,
 	});
 
-	return db.connection.close();
+	db.connection.close();
 })();
 
 process.on("SIGINT", async () => {

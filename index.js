@@ -4,45 +4,47 @@ const {
 	requestLogger,
 	renderHome,
 	renderList,
+	createList,
+	renameList,
+	deleteList,
 	getDetails,
 	getFields,
-	create,
-	update,
-	remove,
+	createListItem,
+	updateListItem,
+	deleteListItem,
 	print,
 	audits,
-	createList,
 	renderFile,
 } = require("./src/controller");
 const { connect } = require("./src/database");
 const router = require("./src/router");
+const { PORT } = require("./config");
 
-const PORT = process.env.PORT || 3000;
+const port = PORT || 3000;
 
 const server = http.createServer(async (req, res) => {
 	await attachBody(req);
 	requestLogger(req);
 
-	// field name has to be in every complex list!
-	// if field count is present - render inc/dec buttons in details for complex lists
-
 	await router.createRouter([
 		router.get("/", renderHome)(req),
 		router.get("/list/:id", renderList)(req),
+		router.post("/list", createList)(req),
+		router.put("/list/:id", renameList)(req),
+		router.delete("/list/:id", deleteList)(req),
 		router.get("/list/:listId/item/:id", getDetails)(req),
 		router.get("/list/:id/fields", getFields)(req),
-		router.post("/list/:id", create)(req),
-		router.put("/list/:listId/item/:id", update)(req),
-		router.delete("/list/:listId/item/:id", remove)(req),
+		router.post("/list/:id", createListItem)(req),
+		router.put("/list/:listId/item/:id", updateListItem)(req),
+		router.delete("/list/:listId/item/:id", deleteListItem)(req),
 		router.get("/list/:id/print", print)(req),
 		router.get("/audits/:id", audits)(req),
-		router.post("/list", createList)(req),
 		router.get("/:file", renderFile)(req),
 	])(req, res);
 });
 
-server.listen(PORT, async () => {
+server.listen(port, async () => {
 	await connect();
 	// eslint-disable-next-line no-console
-	console.log(`Server has been started on ${PORT}...`);
+	console.log(`Server has been started on ${port}...`);
 });

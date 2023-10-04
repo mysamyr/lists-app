@@ -25,14 +25,14 @@ module.exports.getListByName = async (name) => {
 	return await connection.lists.findOne({ name });
 };
 
-module.exports.create = async (id, item) => {
+module.exports.createListItem = async (id, item) => {
 	await connection.lists.updateOne(
 		{ _id: new ObjectId(id) },
 		{ $push: { data: item } },
 	);
 };
 
-module.exports.updateData = async (id, itemId, data) => {
+module.exports.updateListItemData = async (id, itemId, data) => {
 	const updateData = Object.entries(data).reduce((acc, [key, value]) => {
 		acc[`data.$[listItem].${key}`] = value;
 		return acc;
@@ -46,7 +46,7 @@ module.exports.updateData = async (id, itemId, data) => {
 	);
 };
 
-module.exports.delete = async (id, itemId) => {
+module.exports.deleteListItem = async (id, itemId) => {
 	return connection.lists.findOneAndUpdate(
 		{ _id: new ObjectId(id) },
 		{ $pull: { data: { id: new ObjectId(itemId) } } },
@@ -63,4 +63,15 @@ module.exports.createAudit = async (item) => {
 
 module.exports.createList = async (data) => {
 	await connection.lists.insertOne(data);
+};
+
+module.exports.renameList = async (id, name) => {
+	await connection.lists.findOneAndUpdate(
+		{ _id: new ObjectId(id) },
+		{ $set: { name } },
+	);
+};
+
+module.exports.deleteList = async (id) => {
+	await connection.lists.findOneAndDelete({ _id: new ObjectId(id) });
 };

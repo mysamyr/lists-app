@@ -128,6 +128,16 @@ module.exports.validateCreateItem = (
 				throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 	});
+	if (
+		data.find((i) =>
+			Object.entries(i).every(([key, value]) => {
+				if (key === FIELDS.COUNT || key === FIELDS.ID || value === body[key])
+					return true;
+			}),
+		)
+	) {
+		throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+	}
 };
 
 module.exports.validateUpdateItem = (body, { data }) => {
@@ -234,7 +244,7 @@ module.exports.validateCreateList = (body) => async (db) => {
 		!body.printView.length
 	) {
 		throw new Error(
-			"Відсутня схема відображення елементів списку (view: string)",
+			"Відсутня схема відображення компактного списку (printView: string)",
 		);
 	}
 	if (
@@ -258,5 +268,28 @@ module.exports.validateCreateList = (body) => async (db) => {
 			!body.fields.find((f) => f.name === body.sort))
 	) {
 		throw new Error("Неправильне поле для сортування");
+	}
+};
+
+module.exports.validateRenameList = (body) => async (db) => {
+	if (!body) {
+		throw new Error("Відсутнє тіло запиту");
+	}
+	if (
+		!body.hasOwnProperty(FIELDS.NAME) ||
+		typeof body.name !== FIELD_TYPES.STRING
+	) {
+		throw new Error("Відсутня назва списку (name: string)");
+	}
+	if (
+		body.name.length < LISTNAME_MIN_LENGTH ||
+		body.name.length > LISTNAME_MAX_LENGTH
+	) {
+		throw new Error(
+			`Назва списку має включати від ${LISTNAME_MIN_LENGTH} до ${LISTNAME_MAX_LENGTH} символів`,
+		);
+	}
+	if (await db.getListByName(body.name)) {
+		throw new Error("Список з такою назвою вже існує");
 	}
 };

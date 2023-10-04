@@ -9,7 +9,7 @@ const getListItemString = (data) =>
 		return acc;
 	}, "");
 
-module.exports.sortByValue = (arr, key) =>
+module.exports.sortByValue = (arr, key = "name") =>
 	arr.sort((x, y) => {
 		if (x[key] < y[key]) return -1;
 		if (x[key] > y[key]) return 1;
@@ -119,16 +119,27 @@ module.exports.getViewFields = (schema) => {
 	let result = [];
 	let field = null;
 	for (let l of schema) {
-		if (field !== null && l !== "}") {
-			field += l;
-		} else {
-			if (l === "{") {
-				field = "";
-			} else if (l === "}") {
+		// if (field !== null && l !== "}") {
+		// 	field += l;
+		// } else {
+		// 	if (l === "{") {
+		// 		field = "";
+		// 	} else if (l === "}") {
+		// 		result.push(field);
+		// 		field = null;
+		// 	} else {
+		// 		field += l;
+		// 	}
+		if (field === null && l === "{") {
+			field = "";
+			continue;
+		}
+		if (field !== null) {
+			if (l === "}") {
 				result.push(field);
 				field = null;
 			} else {
-				result += l;
+				field += l;
 			}
 		}
 	}

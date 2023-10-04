@@ -102,8 +102,7 @@ window.addEventListener("DOMContentLoaded", async function () {
         <div class="btn green">Зберегти</div>
         <div class="btn red">Скасувати</div>
       </div>
-    </form>
-    `;
+    </form>`;
 	}
 
 	async function saveListItem(details) {
@@ -264,13 +263,12 @@ window.addEventListener("DOMContentLoaded", async function () {
 	async function openRename(id, oldName) {
 		dialog.innerHTML = `
     <form>
-      <input type="text" max="${NAME_MAX_LENGTH}" value="${oldName}">
+      <input type="text" maxlength="${NAME_MAX_LENGTH}" value="${oldName}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
         <div class="btn red">Скасувати</div>
       </div>
-    </form>
-    `;
+    </form>`;
 		const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
 		saveBtn.addEventListener("click", async function () {
 			return renameListItem(id, oldName);
@@ -294,8 +292,7 @@ window.addEventListener("DOMContentLoaded", async function () {
         <div class="btn red">Видалити</div>
         <div class="btn green">Скасувати</div>
       </div>
-    </form>
-    `;
+    </form>`;
 		const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
 		saveBtn.addEventListener("click", async function () {
 			return deleteListItem(id);

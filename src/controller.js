@@ -11,6 +11,7 @@ const {
 	validateCreateItem,
 	validateUpdateItem,
 	validateCreateList,
+	validateRenameList,
 } = require("./validators");
 const { ACTIONS, STATUS, ERROR_MESSAGES, LIST_TYPES } = require("./constants");
 const {
@@ -133,7 +134,7 @@ module.exports.getFields = async (req, res) => {
 	return res.end(JSON.stringify(data.fields));
 };
 
-module.exports.create = async (req, res) => {
+module.exports.createListItem = async (req, res) => {
 	const id = req.params.id;
 	if (!ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
@@ -144,15 +145,15 @@ module.exports.create = async (req, res) => {
 	validateCreateItem(item, details);
 
 	const newId = new ObjectId();
-	await db.create(id, { id: newId, ...item });
+	await db.createListItem(id, { id: newId, ...item });
 	await db.createAudit(
 		prepareAuditData(ACTIONS.CREATE, { ...item, id: newId, listId: id }),
 	);
-	res.writeHead(STATUS.OK);
+	res.writeHead(STATUS.CREATED);
 	return res.end();
 };
 
-module.exports.update = async (req, res) => {
+module.exports.updateListItem = async (req, res) => {
 	const { listId, id } = req.params;
 	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
@@ -161,7 +162,7 @@ module.exports.update = async (req, res) => {
 	const body = req.body;
 	const details = await db.getById(listId);
 	const action = validateUpdateItem(body, details);
-	let updatedData = await db.updateData(listId, id, body);
+	let updatedData = await db.updateListItemData(listId, id, body);
 	await db.createAudit(
 		prepareAuditData(action, { id, listId, body, updatedData }),
 	);
@@ -169,17 +170,17 @@ module.exports.update = async (req, res) => {
 	return res.end();
 };
 
-module.exports.remove = async (req, res) => {
+module.exports.deleteListItem = async (req, res) => {
 	const { listId, id } = req.params;
 	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
 
-	const deletedData = await db.delete(listId, id);
+	const deletedData = await db.deleteListItem(listId, id);
 	await db.createAudit(
 		prepareAuditData(ACTIONS.DELETE, { id, listId, ...deletedData.value }),
 	);
-	res.writeHead(STATUS.OK);
+	res.writeHead(STATUS.NO_CONTENT);
 	return res.end();
 };
 
@@ -214,6 +215,29 @@ module.exports.createList = async (req, res) => {
 		created: new Date().toJSON(),
 		...item,
 	});
+	res.writeHead(STATUS.CREATED);
+	return res.end();
+};
+
+module.exports.renameList = async (req, res) => {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+
+	await validateRenameList(req.body)(db);
+	await db.renameList(id, req.body.name);
 	res.writeHead(STATUS.OK);
+	return res.end();
+};
+
+module.exports.deleteList = async (req, res) => {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+
+	await db.deleteList(id);
+	res.writeHead(STATUS.NO_CONTENT);
 	return res.end();
 };
