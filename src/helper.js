@@ -119,17 +119,6 @@ module.exports.getViewFields = (schema) => {
 	let result = [];
 	let field = null;
 	for (let l of schema) {
-		// if (field !== null && l !== "}") {
-		// 	field += l;
-		// } else {
-		// 	if (l === "{") {
-		// 		field = "";
-		// 	} else if (l === "}") {
-		// 		result.push(field);
-		// 		field = null;
-		// 	} else {
-		// 		field += l;
-		// 	}
 		if (field === null && l === "{") {
 			field = "";
 			continue;

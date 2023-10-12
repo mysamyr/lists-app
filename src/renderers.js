@@ -25,15 +25,16 @@ const generateMeta = ({
 const generateHeader = (text) => `<h1>${text}</h1>`;
 
 const addBtn = `<div class="add-item">+</div>`;
+const backBtn = `<a href="/" class="btn">Назад</a>`;
 const dialog = `<dialog></dialog>`;
 const noContent = `<p>Немає нічого</p>`;
 
 const listMapper = ({ name, id }) =>
 	`<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
 const listItemMapper = (data, schema) =>
-	`<li data-id="${data.id}"><span class="${
-		data.complete ? "completed" : ""
-	}">${getView(
+	`<li data-id="${data.id}" data-name="${
+		data.name || data.message
+	}"><span class="${data.complete ? "completed" : ""}">${getView(
 		data,
 		schema,
 	)}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
@@ -50,13 +51,44 @@ module.exports.generateHome = (list) => {
 
 	const header = generateHeader("Списки");
 	const content = sortedList.map(listMapper);
+	const marginBottom = `<div class="margin-bottom"></div>`;
 
 	return [
 		start,
 		header,
 		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
+		marginBottom,
 		addBtn,
 		dialog,
+		end,
+	].join("");
+};
+module.exports.generateCreateList = () => {
+	const [start, end] = generateMeta({
+		title: "Створити список",
+		stylesheets: ["styles.css"],
+		scripts: ["create-list.js"],
+	});
+
+	const header = generateHeader("Створити новий список");
+
+	const typeSection = `<h2>Виберіть тип списку</h2><label><input name="type" type="radio" value="1">Простий список</label>
+		<label><input name="type" type="radio" value="2">Список справ</label>
+		<label><input name="type" type="radio" value="3">Комплексний список</label>`;
+	const nameSection = `<input name="name" type="text" placeholder="Введіть назву">`;
+	const submitBtn = `<div id="confirm" class="btn green">Зберегти</div>`;
+
+	return [
+		start,
+		`<div class="row">`,
+		header,
+		backBtn,
+		`</div>`,
+		`<form>`,
+		typeSection,
+		nameSection,
+		submitBtn,
+		`</form>`,
 		end,
 	].join("");
 };
@@ -71,8 +103,8 @@ module.exports.generateSimpleList = (list) => {
 	const sortedList = sortByValue(list.data, "message");
 
 	const header = generateHeader(`<b>${list.name}</b>`);
-	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const content = sortedList.map((i) => listItemMapper(i));
+	const marginBottom = `<div class="margin-bottom"></div>`;
 
 	return [
 		start,
@@ -81,6 +113,7 @@ module.exports.generateSimpleList = (list) => {
 		backBtn,
 		`</div>`,
 		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
+		marginBottom,
 		addBtn,
 		dialog,
 		end,
@@ -93,11 +126,11 @@ module.exports.generateTodoList = (list) => {
 		scripts: ["todo-list.js"],
 	});
 
-	const sortedList = sortByValue(list.data);
+	const sortedList = sortByValue(list.data, "message");
 
 	const header = generateHeader(`<b>${list.name}</b>`);
-	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const content = sortedList.map((i) => listItemMapper(i));
+	const marginBottom = `<div class="margin-bottom"></div>`;
 
 	return [
 		start,
@@ -106,6 +139,7 @@ module.exports.generateTodoList = (list) => {
 		backBtn,
 		`</div>`,
 		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
+		marginBottom,
 		addBtn,
 		dialog,
 		end,
@@ -121,10 +155,9 @@ module.exports.generateComplexList = (list) => {
 	const sortedList = sortByValue(list.data, list.sort);
 
 	const header = generateHeader(`<b>${list.name}</b>`);
-	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const content = sortedList.map((i) => listItemMapper(i, list.view));
-	const btns = `<div class="btns">
-        <a href="/list/${list._id.toString()}/print" class="btn print">Показати список</a>
+	const btns = `<div class="btns margin-bottom">
+        <a href="/list/${list._id.toString()}/print" class="btn">Показати список</a>
     </div>`;
 
 	return [

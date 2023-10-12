@@ -3,6 +3,7 @@ const {
 	attachBody,
 	requestLogger,
 	renderHome,
+	renderCreateList,
 	renderList,
 	createList,
 	renameList,
@@ -28,6 +29,7 @@ const server = http.createServer(async (req, res) => {
 
 	await router.createRouter([
 		router.get("/", renderHome)(req),
+		router.get("/list", renderCreateList)(req),
 		router.get("/list/:id", renderList)(req),
 		router.post("/list", createList)(req),
 		router.put("/list/:id", renameList)(req),

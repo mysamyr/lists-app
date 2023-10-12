@@ -1,7 +1,7 @@
 const MESSAGE_MIN_LENGTH = 3;
 const MESSAGE_MAX_LENGTH = 50;
 
-window.addEventListener("DOMContentLoaded", async function () {
+window.addEventListener("DOMContentLoaded", function () {
 	const listId = location.pathname.split("/")[2];
 	const list = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
@@ -120,7 +120,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openCreation() {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <input name="name" type="text" placeholder="Введіть текст">
       <div class="btns">
         <div class="btn green">Зберегти</div>
@@ -140,7 +140,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openRename(id, oldMessage) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <input type="text" maxlength="${MESSAGE_MAX_LENGTH}" value="${oldMessage}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
@@ -164,7 +164,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openDelete(id, message) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <p>Справді видалити <b>${message}</b>?</p>
       <div class="btns">
         <div class="btn red">Видалити</div>

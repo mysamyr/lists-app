@@ -1,11 +1,10 @@
 const NAME_MIN_LENGTH = 3;
 const NAME_MAX_LENGTH = 30;
 
-window.addEventListener("DOMContentLoaded", async function () {
+window.addEventListener("DOMContentLoaded", function () {
 	const list = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
 	const addItemBtn = document.querySelector(".add-item");
-	let preventModalClose = false;
 
 	function closeDialog() {
 		dialog.innerHTML = "";
@@ -71,80 +70,9 @@ window.addEventListener("DOMContentLoaded", async function () {
 		closeDialog();
 	}
 
-	// async function openChooseType() {
-	// 	dialog.innerHTML = `
-	//   <form>
-	//   	<p>Виберіть тип списку, який хочете створити:</p>
-	//     <input name="type" type="radio" value="1" id="simple">
-	//     <label for="simple">Звичайний</label>
-	//     <input name="type" type="radio" value="2" id="todo">
-	//     <label for="todo">Список справ</label>
-	//     <input name="type" type="radio" value="3" id="complex">
-	//     <label for="complex">Комплексний</label>
-	//     <div class="btns">
-	//       <div class="btn green">Вибрати</div>
-	//       <div class="btn red">Скасувати</div>
-	//     </div>
-	//   </form>`;
-	// 	const [nextBtn, closeBtn] = document.querySelectorAll("dialog .btn");
-	// 	nextBtn.addEventListener("click", async function () {
-	// 		preventModalClose = true;
-	// 		// render select message
-	// 		dialog.close();
-	// 		const type = +document.querySelector("form").type.value;
-	// 		if (type === 3) {
-	// 			alert("Тимчасово не підтримується");
-	// 		}
-	// 		if (type !== 1 && type !== 2) {
-	// 			alert("Невірний тип");
-	// 		}
-	// 		dialog.innerHTML = `
-	// 		<form>
-	// 			<p>Введіть назву списку</p>
-	// 			<input name="name" type="text" maxlength="${NAME_MAX_LENGTH}" placeholder="Назва">
-	// 			<div class="btns">
-	// 				<div class="btn green">Зберегти</div>
-	// 				<div class="btn red">Скасувати</div>
-	// 			</div>
-	// 		</form>`;
-	// 		const [saveBtn, closeBtn] = document.querySelectorAll("dialog .btn");
-	// 		saveBtn.addEventListener("click", async function () {
-	// 			const name = document.querySelector("form").name.value;
-	// 			validateName(name);
-	// 			await fetch(`/list`, {
-	// 				method: "POST",
-	// 				headers: {
-	// 					"Content-Type": "application/json",
-	// 				},
-	// 				body: JSON.stringify({ type, name }),
-	// 			})
-	// 			.then(async function (data) {
-	// 				if (!data.ok) {
-	// 					const res = await data.json();
-	// 					throw new Error(res.error);
-	// 				}
-	// 				closeDialog();
-	// 				location.href = "/";
-	// 			})
-	// 			.catch(function (e) {
-	// 				logError(e.message);
-	// 				alert(e.message);
-	// 			});
-	// 		});
-	// 		closeBtn.addEventListener("click", function () {
-	// 			closeDialog();
-	// 		});
-	// 		dialog.showModal();
-	// 	});
-	// 	closeBtn.addEventListener("click", function () {
-	// 		closeDialog();
-	// 	});
-	// 	dialog.showModal();
-	// }
-
 	async function openRename(id, oldName) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <input type="text" maxlength="${NAME_MAX_LENGTH}" value="${oldName}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
@@ -168,7 +96,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openDelete(id, name) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <p>Справді видалити ${name}?</p>
       <div class="btns">
         <div class="btn red">Видалити</div>
@@ -199,11 +127,9 @@ window.addEventListener("DOMContentLoaded", async function () {
 		});
 	});
 	addItemBtn.addEventListener("click", async function () {
-		alert("Тимчасово недоступно =)");
-		// await openChooseType();
+		return location.replace(`/list`);
 	});
 	dialog.addEventListener("click", function (e) {
-		if (preventModalClose) return;
 		const dialogDimensions = dialog.getBoundingClientRect();
 		if (
 			dialog.open &&

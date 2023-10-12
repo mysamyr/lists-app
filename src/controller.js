@@ -16,6 +16,7 @@ const {
 const { ACTIONS, STATUS, ERROR_MESSAGES, LIST_TYPES } = require("./constants");
 const {
 	generateHome,
+	generateCreateList,
 	generatePrint,
 	generate404,
 	generateComplexList,
@@ -84,6 +85,11 @@ module.exports.renderHome = async (req, res) => {
 	const data = generateHome(list);
 	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
 	return res.end(data);
+};
+
+module.exports.renderCreateList = async (req, res) => {
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
+	return res.end(generateCreateList());
 };
 
 module.exports.renderList = async (req, res) => {

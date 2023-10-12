@@ -1,8 +1,19 @@
 declare all error messages
 
+rewrite css default selectors to classes
+remove renderers from server
+
 add create feature for lists - create diagram with steps
 
 ? add possibility to not show some fields (fields.show: bool) - reason???
 ? change list configuration
 add authorisation
 refactoring client`s scripts (common logic)
+
+analyze and brainstorm repetitive todo lists feature
+
+
+todo
+- have only 3 scripts (home, list, create-list)
+- server send only pure html with meta (right styles, title and script)
+- collect state object in script with lists and list type

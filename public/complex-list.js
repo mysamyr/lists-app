@@ -1,7 +1,7 @@
 const NAME_MIN_LENGTH = 3;
 const NAME_MAX_LENGTH = 50;
 
-window.addEventListener("DOMContentLoaded", async function () {
+window.addEventListener("DOMContentLoaded", function () {
 	const listId = location.pathname.split("/")[2];
 	const list = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
@@ -96,7 +96,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 			)
 			.join("\n");
 		return `
-    <form>
+    <form class="modal-form">
       ${inputs}
       <div class="btns">
         <div class="btn green">Зберегти</div>
@@ -262,7 +262,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openRename(id, oldName) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <input type="text" maxlength="${NAME_MAX_LENGTH}" value="${oldName}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
@@ -286,7 +286,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	async function openDelete(id, name) {
 		dialog.innerHTML = `
-    <form>
+    <form class="modal-form">
       <p>Справді видалити ${name}?</p>
       <div class="btns">
         <div class="btn red">Видалити</div>
@@ -305,8 +305,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 
 	list.forEach(function (listItem) {
 		listItem.addEventListener("click", async function (e) {
-			const id = listItem.dataset.id;
-			const name = listItem.textContent.split(" ").slice(0, -1).join(" ");
+			const { id, name } = listItem.dataset;
 			if (e.target.id === "edit") {
 				return await openRename(id, name);
 			}
