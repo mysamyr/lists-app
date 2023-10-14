@@ -15,6 +15,42 @@ const URLS = {
 	},
 };
 
+async function getRequest(url, func) {
+	return fetch(url, { method: "GET", cache: "no-cache" })
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			document.querySelector(
+				"body",
+			).innerHTML = `<h1>Сталася помилка</h1><a href="/">Обновити</a>`;
+			alert(e.message);
+		});
+}
+
+async function putRequest(url, body, func) {
+	return fetch(url, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(body),
+	})
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			alert(e.message);
+		});
+}
+
+async function deleteRequest(url, func) {
+	return fetch(url, { method: "DELETE" })
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			alert(e.message);
+		});
+}
+
 function sortByName(arr) {
 	return arr.sort((x, y) => {
 		if (x.name < y.name) return -1;
@@ -39,25 +75,18 @@ function validateName(name, oldName) {
 
 window.addEventListener("DOMContentLoaded", async function () {
 	const body = document.querySelector("body");
-	await fetch(URLS.GET_LISTS, { method: "GET" })
-		.then(async function (data) {
-			return data.json();
-		})
-		.then(async function (lists) {
-			const content = sortByName(lists).map(function ({ name, id }) {
-				return `<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
-			});
-			body.innerHTML = `<h1>Списки</h1>
+
+	await getRequest(URLS.GET_LISTS, async function (data) {
+		const lists = await data.json();
+		const content = sortByName(lists).map(function ({ name, id }) {
+			return `<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
+		});
+		body.innerHTML = `<h1>Списки</h1>
 				${content.length ? `<ul>${content.join("\n")}</ul>` : "<p>Немає нічого</p>"}
 				<div class="margin-bottom"></div>
 				<div class="add-item">+</div>
 				<dialog></dialog>`;
-		})
-		.catch(function (e) {
-			logError(e.message);
-			body.innerHTML = `<h1>Сталася помилка</h1><a href="/">Обновити</a>`;
-			alert(e.message);
-		});
+	});
 
 	const list = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
@@ -72,41 +101,28 @@ window.addEventListener("DOMContentLoaded", async function () {
 		const name = document.querySelector("input");
 		const error = validateName(name.value, oldName);
 		if (error) return alert(error);
-		await fetch(URLS.RENAME_$(id), {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ name: name.value }),
-		})
-			.then(async function (data) {
+		await putRequest(
+			URLS.RENAME_$(id),
+			{ name: name.value },
+			async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
 				closeDialog();
 				location.href = URLS.HOME;
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
+			},
+		);
 	}
 
 	async function deleteList(id) {
-		await fetch(URLS.DELETE_$(id), { method: "DELETE" })
-			.then(async function (data) {
-				if (!data.ok) {
-					const res = await data.json();
-					throw new Error(res.error);
-				}
-				location.href = URLS.HOME;
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
-		closeDialog();
+		await deleteRequest(URLS.DELETE_$(id), async function (data) {
+			if (!data.ok) {
+				const res = await data.json();
+				throw new Error(res.error);
+			}
+			location.href = URLS.HOME;
+		});
 	}
 
 	async function openRename(id, oldName) {

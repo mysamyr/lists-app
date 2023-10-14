@@ -1,5 +1,5 @@
 const path = require("path");
-const { ACTIONS } = require("./constants");
+const { ACTIONS } = require("./enums");
 
 const getListItemString = (data) =>
 	Object.entries(data).reduce((acc, [key, value]) => {
@@ -48,22 +48,22 @@ module.exports.prepareAuditData = (action, data) => {
 			break;
 		case ACTIONS.RENAME:
 			res = {
-				name: data.updatedData.value.name,
-				before: data.updatedData.value.name,
+				name: data.updatedItem.name,
+				before: data.updatedItem.name,
 				after: data.body.name,
 			};
 			break;
 		case ACTIONS.CHANGE_NUMBER:
 			res = {
-				name: data.updatedData.value.name,
-				before: data.updatedData.value.count,
+				name: data.updatedItem.name,
+				before: data.updatedItem.count,
 				after: data.body.count,
 			};
 			break;
 		case ACTIONS.COMPLETE:
 			res = {
-				name: data.updatedData.value.name,
-				before: data.updatedData.value.complete,
+				name: data.updatedItem.name,
+				before: data.updatedItem.complete,
 				after: data.body.complete,
 			};
 			break;

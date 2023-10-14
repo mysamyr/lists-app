@@ -22,6 +22,57 @@ const URLS = {
 	},
 };
 
+async function getRequest(url, func) {
+	return fetch(url, { method: "GET", cache: "no-cache" })
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			document.querySelector(
+				"body",
+			).innerHTML = `<h1>Сталася помилка</h1><a href="/">Обновити</a>`;
+			alert(e.message);
+		});
+}
+
+async function postRequest(url, body, func) {
+	return fetch(url, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(body),
+	})
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			alert(e.message);
+		});
+}
+
+async function putRequest(url, body, func) {
+	return fetch(url, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(body),
+	})
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			alert(e.message);
+		});
+}
+
+async function deleteRequest(url, func) {
+	return fetch(url, { method: "DELETE" })
+		.then(func)
+		.catch(function (e) {
+			logError(e.message);
+			alert(e.message);
+		});
+}
+
 function sortByValue(arr, key = "name") {
 	return arr.sort(function (x, y) {
 		if (x[key] < y[key]) return -1;
@@ -104,40 +155,32 @@ window.addEventListener("DOMContentLoaded", async function () {
 	const listId = location.pathname.split("/")[2];
 	const body = document.querySelector("body");
 	let store;
-	await fetch(URLS.GET_$(listId), { method: "GET" })
-		.then(async function (data) {
-			return data.json();
-		})
-		.then(async function (res) {
-			const { name, type, data, view, sort } = res;
-			store = res;
+	await getRequest(URLS.GET_$(listId), async function (res) {
+		const listData = await res.json();
+		const { name, type, data, view, sort } = listData;
+		store = listData;
 
-			const content = sortByValue(data, sort).map(function (i) {
-				const listItemView = getView(i, view);
-				const listItemClass = i.complete ? "completed" : "";
-				return `<li data-id="${i.id}"><span class="${listItemClass}">${listItemView}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
-			});
+		const content = sortByValue(data, sort).map(function (i) {
+			const listItemView = getView(i, view);
+			const listItemClass = i.complete ? "completed" : "";
+			return `<li data-id="${i.id}"><span class="${listItemClass}">${listItemView}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
+		});
 
-			const btns =
-				type === 3 && content.length
-					? `<div class="btns margin-bottom"><a href="${URLS.PRINT_$(
-							listId,
-					  )}" class="btn">Показати стисло</a></div>`
-					: `<div class="margin-bottom"></div>`;
+		const btns =
+			type === 3 && content.length
+				? `<div class="btns margin-bottom"><a href="${URLS.PRINT_$(
+						listId,
+				  )}" class="btn">Показати стисло</a></div>`
+				: `<div class="margin-bottom"></div>`;
 
-			body.innerHTML = `<div class="row"><h1>${name}</h1><a href="${
-				URLS.HOME
-			}" class="btn">Назад</a></div>
+		body.innerHTML = `<div class="row"><h1>${name}</h1><a href="${
+			URLS.HOME
+		}" class="btn">Назад</a></div>
 				${content.length ? `<ul>${content.join("\n")}</ul>` : "<p>Список пустий</p>"}
 				${btns}
 				<div class="add-item">+</div>
 				<dialog></dialog>`;
-		})
-		.catch(function (e) {
-			logError(e.message);
-			body.innerHTML = `<h1>Сталася помилка</h1><a href="${URLS.HOME}">Обновити</a>`;
-			alert(e.message);
-		});
+	});
 
 	const listItems = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
@@ -209,114 +252,79 @@ window.addEventListener("DOMContentLoaded", async function () {
 				break;
 		}
 
-		await fetch(URLS.CREATE_$(listId), {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(creationData),
-		})
-			.then(async function (data) {
+		await postRequest(
+			URLS.CREATE_$(listId),
+			creationData,
+			async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
 				closeDialog();
 				location.href = URLS.LIST_PAGE_$(listId);
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
+			},
+		);
 	}
 
 	async function renameListItem(id, oldName) {
 		const name = document.querySelector("input");
 		const error = validateName(name.value, oldName);
 		if (error) return alert(error);
-		await fetch(URLS.UPDATE_$(listId, id), {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ name: name.value }),
-		})
-			.then(async function (data) {
+		await putRequest(
+			URLS.UPDATE_$(listId, id),
+			{ name: name.value },
+			async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
-				closeDialog();
 				location.href = URLS.LIST_PAGE_$(listId);
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
+			},
+		);
 	}
 
 	async function deleteListItem(id) {
-		await fetch(URLS.DELETE_$(listId, id), { method: "DELETE" })
-			.then(async function (data) {
-				if (!data.ok) {
-					const res = await data.json();
-					throw new Error(res.error);
-				}
-				location.href = URLS.LIST_PAGE_$(listId);
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
-		closeDialog();
+		await deleteRequest(URLS.DELETE_$(listId, id), async function (data) {
+			if (!data.ok) {
+				const res = await data.json();
+				throw new Error(res.error);
+			}
+			location.href = URLS.LIST_PAGE_$(listId);
+		});
 	}
 
 	async function markListItemDone(id, completed) {
-		await fetch(URLS.UPDATE_$(listId, id), {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ complete: !completed }),
-		})
-			.then(async function (data) {
+		await putRequest(
+			URLS.UPDATE_$(listId, id),
+			{ complete: !completed },
+			async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
-				closeDialog();
 				location.href = URLS.LIST_PAGE_$(listId);
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
+			},
+		);
 	}
 
-	async function changeCount(id, isAdd) {
+	async function changeCount(item, isAdd) {
 		const countElement = document.getElementById("count");
-		const count = +countElement.innerText;
+		const count = item.count;
 		const newCount = isAdd ? count + 1 : count - 1;
 
 		if (newCount < 0) return alert("Кількість не може бути від'ємною!");
-		await fetch(URLS.UPDATE_$(listId, id), {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ count: newCount }),
-		})
-			.then(async function (data) {
+		await putRequest(
+			URLS.UPDATE_$(listId, item.id),
+			{ count: newCount },
+			async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
 				countElement.innerText = `${newCount}`;
-			})
-			.catch(function (e) {
-				logError(e.message);
-				alert(e.message);
-			});
+				item.count = newCount;
+			},
+		);
 	}
 
 	async function openDetails(item, fields) {
@@ -329,10 +337,10 @@ window.addEventListener("DOMContentLoaded", async function () {
 		});
 		if (decBtn && incBtn) {
 			decBtn.addEventListener("click", async function () {
-				await changeCount(item.id, false);
+				await changeCount(item, false);
 			});
 			incBtn.addEventListener("click", async function () {
-				await changeCount(item.id, true);
+				await changeCount(item, true);
 			});
 		}
 		dialog.showModal();

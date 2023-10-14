@@ -37,7 +37,7 @@ module.exports.updateListItemData = async (id, itemId, data) => {
 		acc[`data.$[listItem].${key}`] = value;
 		return acc;
 	}, {});
-	return connection.lists.findOneAndUpdate(
+	await connection.lists.updateOne(
 		{ _id: new ObjectId(id) },
 		{ $set: updateData },
 		{

@@ -1,7 +1,6 @@
-declare all error messages
-
 rewrite css default selectors to classes
-add error page
+
+add sorting on the client
 
 add create feature for lists - create diagram with steps
 
@@ -9,4 +8,4 @@ add create feature for lists - create diagram with steps
 ? change list configuration
 add authorisation
 
-analyze and brainstorm repetitive todo lists feature
+* analyze and brainstorm repetitive todo lists feature

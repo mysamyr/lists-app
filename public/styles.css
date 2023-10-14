@@ -22,6 +22,9 @@ li {
 	border-radius: 10px;
 	background-color: #ccc;
 }
+li:hover {
+	cursor: pointer;
+}
 h2 {
 	font-size: 18px;
 }

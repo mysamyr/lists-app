@@ -1,12 +1,9 @@
 const {
-	ACTIONS,
 	ERROR_MESSAGES,
 	NAME_MIN_LENGTH,
 	NAME_MAX_LENGTH,
-	FIELDS,
-	FIELD_TYPES,
-	LIST_TYPES,
 } = require("./constants");
+const { ACTIONS, FIELDS, FIELD_TYPES, LIST_TYPES } = require("./enums");
 const { getViewFields } = require("./helper");
 const { getListByName } = require("./database");
 
@@ -34,7 +31,10 @@ const validateFields = (fields) => {
 		) {
 			throw new Error("Схема має містити поле type: string (Тип поля)");
 		}
-		if (field.type !== "string" && field.type !== FIELD_TYPES.NUMBER) {
+		if (
+			field.type !== FIELD_TYPES.STRING &&
+			field.type !== FIELD_TYPES.NUMBER
+		) {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 		if (
@@ -69,21 +69,19 @@ const validateName = async (body, data) => {
 		!body.hasOwnProperty(FIELDS.NAME) ||
 		typeof body.name !== FIELD_TYPES.STRING
 	) {
-		throw new Error("Відсутня назва списку (name: string)");
+		throw new Error(ERROR_MESSAGES.NOT_VALID_NAME);
 	}
 	if (
 		body.name.length < NAME_MIN_LENGTH ||
 		body.name.length > NAME_MAX_LENGTH
 	) {
-		throw new Error(
-			`Назва списку має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`,
-		);
+		throw new Error(ERROR_MESSAGES.NOT_VALID_NAME);
 	}
 	if (
 		(data && data.find((i) => i.name === body.name)) ||
 		(await getListByName(body.name))
 	) {
-		throw new Error("Список з такою назвою вже існує");
+		throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
 	}
 };
 
@@ -124,7 +122,7 @@ const validateUniqueFieldsCombination = (body, { fields, data }) => {
 			}),
 		)
 	) {
-		throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+		throw new Error(ERROR_MESSAGES.NOT_UNIQUE_LIST_ITEM);
 	}
 };
 
@@ -138,14 +136,14 @@ const isViewValid = (schema, fields) => {
 
 module.exports.validateCreateItem = (body, { type, fields, data }) => {
 	if (!body) {
-		throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
+		throw new Error(ERROR_MESSAGES.NO_DATA);
 	}
 	if (type === LIST_TYPES.SIMPLE || type === LIST_TYPES.TODO) {
 		if (!body.hasOwnProperty(FIELDS.NAME)) {
-			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
+			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
 		}
 		if (type === LIST_TYPES.TODO && !body.hasOwnProperty(FIELDS.COMPLETE)) {
-			throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
+			throw new Error(ERROR_MESSAGES.NO_DATA);
 		}
 		const name = body.name;
 		if (
@@ -156,7 +154,7 @@ module.exports.validateCreateItem = (body, { type, fields, data }) => {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
 		}
 		if (data.find((i) => i.name === name)) {
-			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+			throw new Error(ERROR_MESSAGES.NOT_UNIQUE_LIST_ITEM);
 		}
 		return;
 	}
@@ -174,11 +172,15 @@ module.exports.validateUpdateItem = async (
 			!body.hasOwnProperty(FIELDS.NAME) &&
 			!body.hasOwnProperty(FIELDS.COMPLETE))
 	) {
-		throw new Error("Відсутні дані");
+		throw new Error(ERROR_MESSAGES.NO_DATA);
 	}
 	if (body.hasOwnProperty(FIELDS.COUNT)) {
 		if (typeof body.count !== FIELD_TYPES.NUMBER || body.count < 0) {
-			throw new Error("Кількість не може бути від'ємна");
+			throw new Error(ERROR_MESSAGES.NEGATIVE_COUNT);
+		}
+		const item = data.find((i) => i.id.toString() === id);
+		if (body.count === item.count) {
+			throw new Error(ERROR_MESSAGES.COUNT_DIDNT_CHANGE);
 		}
 		return ACTIONS.CHANGE_NUMBER;
 	}
@@ -188,9 +190,7 @@ module.exports.validateUpdateItem = async (
 			body.name.length < NAME_MIN_LENGTH ||
 			body.name.length > NAME_MAX_LENGTH
 		) {
-			throw new Error(
-				`Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`,
-			);
+			throw new Error(ERROR_MESSAGES.NOT_VALID_NAME);
 		}
 		if (type === LIST_TYPES.SIMPLE || type === LIST_TYPES.TODO) {
 			await validateName(body, data);
@@ -213,25 +213,25 @@ module.exports.validateUpdateItem = async (
 
 module.exports.validateCreateList = async (body) => {
 	if (!body) {
-		throw new Error("Відсутнє тіло запиту");
+		throw new Error(ERROR_MESSAGES.NO_DATA);
 	}
 	if (
 		!body.hasOwnProperty(FIELDS.TYPE) ||
 		typeof body.type !== FIELD_TYPES.NUMBER
 	) {
-		throw new Error("Відсутній тип списку");
+		throw new Error(ERROR_MESSAGES.NOT_VALID_LIST_TYPE);
 	}
 	if (
 		body.type !== LIST_TYPES.SIMPLE &&
 		body.type !== LIST_TYPES.TODO &&
 		body.type !== LIST_TYPES.COMPLEX
 	) {
-		throw new Error("Неправильний тип списку");
+		throw new Error(ERROR_MESSAGES.NOT_VALID_LIST_TYPE);
 	}
 	await validateName(body);
 	if (body.type === LIST_TYPES.SIMPLE || body.type === LIST_TYPES.TODO) {
 		if (Object.keys(body).length > 2) {
-			throw new Error("Неправильні дані для створення списку");
+			throw new Error(ERROR_MESSAGES.INVALID_DATA);
 		}
 		return;
 	}
@@ -240,31 +240,27 @@ module.exports.validateCreateList = async (body) => {
 		typeof body.view !== FIELD_TYPES.STRING ||
 		!body.view.length
 	) {
-		throw new Error(
-			"Відсутня схема відображення елементів списку (view: string)",
-		);
+		throw new Error(ERROR_MESSAGES.NO_VIEW);
 	}
 	if (
 		!body.hasOwnProperty(FIELDS.PRINT_VIEW) ||
 		typeof body.printView !== FIELD_TYPES.STRING ||
 		!body.printView.length
 	) {
-		throw new Error(
-			"Відсутня схема відображення компактного списку (printView: string)",
-		);
+		throw new Error(ERROR_MESSAGES.NO_PRINT_VIEW);
 	}
 	if (
 		!isViewValid(body.view, body.fields) ||
 		!isViewValid(body.printView, body.fields)
 	) {
-		throw new Error("Схема відображення включає неіснуючі поля");
+		throw new Error(ERROR_MESSAGES.TOO_MANY_FIELDS);
 	}
 	if (
 		!body.hasOwnProperty(FIELDS.FIELDS) ||
 		!Array.isArray(body.fields) ||
 		!body.fields?.length
 	) {
-		throw new Error("Відсутня схема полів списку (fields: object[])");
+		throw new Error(ERROR_MESSAGES.NO_FIELDS);
 	}
 	validateFields(body.fields);
 	if (
@@ -273,13 +269,13 @@ module.exports.validateCreateList = async (body) => {
 			!body.sort.length ||
 			!body.fields.find((f) => f.name === body.sort))
 	) {
-		throw new Error("Неправильне поле для сортування");
+		throw new Error(ERROR_MESSAGES.NO_SORT);
 	}
 };
 
 module.exports.validateRenameList = async (body) => {
 	if (!body) {
-		throw new Error("Відсутнє тіло запиту");
+		throw new Error(ERROR_MESSAGES.NO_DATA);
 	}
 	await validateName(body);
 };

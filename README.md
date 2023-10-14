@@ -1,15 +1,20 @@
-# List Application
+# Lister Application
 
 ## Setup
 
-1. create `config/keys-dev.js` file with exported fields `PORT`, `MONGODB_URI` and `MONGODB_DB_NAME` (example in `config/keys-prod.js`).
-2. run `npm install`
+1. create `config/keys-dev.js` file with exported fields `NODE_ENV`, `PORT`, `MONGODB_URI` and `MONGODB_DB_NAME` (example in `config/keys-prod.js`).
+   1. `NODE_ENV` = "production" or "development"
+   2. `PORT` = port, on which app will run
+   3. `MONGODB_URI` = url with connection to Mongo DB
+   4. `MONGODB_DB_NAME` = database's name
+2. run `npm install` to install all dependencies
+3. run `npm run start` to start application
 
 ## General info
 
 Application on **Node.js** with **Mongodb** that works with lists. Server renders HTML, send files and JSON.
 
-Endpoints can be found in `ideas/endpoints.md`, database structure in `ideas/db.js`.
+Endpoints can be found in `ideas/endpoints.md`, database structure examples - in `ideas/db.js`.
 
 ## Lists
 
@@ -17,8 +22,8 @@ There are 3 types with lists: **Simple**, **Todo** and **Complex** lists. All li
 
 **Simple** lists contains only messages.
 
-**Todo** lists have messages and possibility to be marked as done.
+**Todo** lists have messages and possibility to mark them done.
 
 **Complex** list items includes different fields (e.g. `name`, `count`, etc.). Field `name` is obligatory, if field `count` is present you can manage count of list items in list.
 
-Messages have limitations to 50 characters, list names - to 30. Count cannot be negative
+Messages have limitations to 50 characters. Count cannot be negative

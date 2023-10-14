@@ -1,5 +1,4 @@
-const { STATUS, METHOD } = require("./constants");
-const { CONTENT_TYPE } = require("./enums");
+const { CONTENT_TYPE, STATUS, METHOD } = require("./enums");
 
 const requestHandler = (path, method, req, fn) => {
 	// ignore query, only params

@@ -13,7 +13,8 @@ const {
 	validateCreateList,
 	validateRenameList,
 } = require("./validators");
-const { ACTIONS, STATUS, ERROR_MESSAGES } = require("./constants");
+const { ERROR_MESSAGES } = require("./constants");
+const { CONTENT_TYPE, STATUS, ACTIONS } = require("./enums");
 const {
 	renderHome,
 	renderList,
@@ -21,7 +22,6 @@ const {
 	generatePrint,
 	generate404,
 } = require("./renderers");
-const { CONTENT_TYPE } = require("./enums");
 
 const getBody = async (request) => {
 	return await new Promise((resolve, reject) => {
@@ -93,12 +93,12 @@ module.exports.renderList = async (req, res) => {
 	if (!ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
-	const list = await db.getById(id);
-	if (!list) {
-		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	const details = await db.getById(id);
+	if (!details) {
+		throw new Error(ERROR_MESSAGES.NO_LIST_ITEM);
 	}
 	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
-	return res.end(renderList(list.name));
+	return res.end(renderList(details.name));
 };
 
 module.exports.print = async (req, res) => {
@@ -107,18 +107,20 @@ module.exports.print = async (req, res) => {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
 
-	const list = await db.getById(id);
-	if (!list) {
-		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	const details = await db.getById(id);
+	if (!details) {
+		throw new Error(ERROR_MESSAGES.NO_LIST_ITEM);
 	}
 	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
-	return res.end(generatePrint(list));
+	return res.end(generatePrint(details));
 };
 
 module.exports.getLists = async (req, res) => {
 	const list = await db.getAll();
 	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
-	return res.end(JSON.stringify(list.map((i) => ({ id: i.id, name: i.name }))));
+	return res.end(
+		JSON.stringify(list.map((i) => ({ id: i.id.toString(), name: i.name }))),
+	);
 };
 
 module.exports.createList = async (req, res) => {
@@ -202,16 +204,20 @@ module.exports.createListItem = async (req, res) => {
 
 module.exports.updateListItem = async (req, res) => {
 	const { listId, id } = req.params;
+	const body = req.body;
 	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
 
-	const body = req.body;
 	const details = await db.getById(listId);
+	if (!details) {
+		throw new Error(ERROR_MESSAGES.NO_LIST_ITEM);
+	}
 	const action = await validateUpdateItem(body, details, id);
-	let updatedData = await db.updateListItemData(listId, id, body);
+	const updatedItem = details.data.find((i) => i.id.toString() === id);
+	await db.updateListItemData(listId, id, body);
 	await db.createAudit(
-		prepareAuditData(action, { id, listId, body, updatedData }),
+		prepareAuditData(action, { id, listId, body, updatedItem }),
 	);
 	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end();
