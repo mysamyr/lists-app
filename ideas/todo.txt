@@ -1,9 +1,12 @@
-? make unique combinations for 3 lists. Think how to implement
+declare all error messages
 
-add create and rename features for lists (not list-items)
+rewrite css default selectors to classes
+add error page
 
-refactoring client`s scripts (common logic)
+add create feature for lists - create diagram with steps
 
-declare all error messages and constants
+? add possibility to not show some fields (fields.show: bool) - reason???
+? change list configuration
+add authorisation
 
-add possibility to not show some fields (fields.show: bool)
+analyze and brainstorm repetitive todo lists feature

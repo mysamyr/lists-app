@@ -1,14 +1,25 @@
+### Renderers
+
 `GET /` - render home page <br/>
-`GET /list/:id` - render specific list <br/>
+`GET /create-list-page` - render create list page <br/>
+`GET /list-page/:id` - render specific list <br/>
+`GET /print-list/:id` - render list's compact view <br/>
+
+### List
+
+`GET /list` - get list of lists <br/>
+`POST /list` - create new list <br/>
+`PUT /list/:id` - rename list <br/>
+`DELETE /list/:id` - delete list <br/>
+
+### List item
+
+`GET /list/:id` - get list details <br/>
 `POST /list/:id` - create new list item <br/>
-`GET /list/:listId/item/:id` - get list item's details <br/>
-`GET /list/:id/fields` - get field list for list item's creation <br/>
 `PUT /list/:listId/item/:id` - update list item <br/>
 `DELETE /list/:listId/item/:id` - delete list item <br/>
-`GET /list/:id/print` - render list's compact view <br/>
 
-`GET /audits/:id` - get audits for list (JSON) <br/>
-`POST /list` - create new list <br/>
-_`PUT /list/:listId` - rename list <br/>
-_`DELETE /list/:listId` - delete list <br/>
+### Other
+
+\*`GET /audits/:id` - get audits for list (JSON) <br/>
 `GET /:file` - get file (CSS, JS, favicon) <br/>

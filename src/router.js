@@ -1,4 +1,5 @@
 const { STATUS, METHOD } = require("./constants");
+const { CONTENT_TYPE } = require("./enums");
 
 const requestHandler = (path, method, req, fn) => {
 	// ignore query, only params
@@ -45,7 +46,7 @@ module.exports.createRouter = (controllers) => async (req, res) => {
 	} catch (e) {
 		// eslint-disable-next-line no-console
 		console.error(e);
-		res.writeHead(STATUS.BAD_REQUEST, { "Content-Type": "application/json" });
+		res.writeHead(STATUS.BAD_REQUEST, CONTENT_TYPE.JSON);
 		return res.end(JSON.stringify({ error: e.message }));
 	}
 };

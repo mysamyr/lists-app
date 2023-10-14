@@ -11,16 +11,17 @@ const {
 	validateCreateItem,
 	validateUpdateItem,
 	validateCreateList,
+	validateRenameList,
 } = require("./validators");
 const { ACTIONS, STATUS, ERROR_MESSAGES } = require("./constants");
 const {
-	generateHome,
+	renderHome,
+	renderList,
+	renderCreateList,
 	generatePrint,
 	generate404,
-	generateComplexList,
-	generateSimpleList,
-	generateTodoList,
 } = require("./renderers");
+const { CONTENT_TYPE } = require("./enums");
 
 const getBody = async (request) => {
 	return await new Promise((resolve, reject) => {
@@ -70,69 +71,117 @@ module.exports.renderFile = (req, res) => {
 		return res.end(data);
 	} catch (err) {
 		if (err.code === "ENOENT") {
-			res.writeHead(STATUS.NOT_FOUND, { "Content-Type": "text/html" });
+			res.writeHead(STATUS.NOT_FOUND, CONTENT_TYPE.PLAIN);
 			return res.end(generate404());
 		}
-		throw new Error("Internal Server Error");
+		throw new Error(ERROR_MESSAGES.INTERNAL_SERVER_ERROR);
 	}
 };
 
 module.exports.renderHome = async (req, res) => {
-	const list = await db.getAll();
-	const data = generateHome(list);
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
-	return res.end(data);
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
+	return res.end(renderHome());
+};
+
+module.exports.renderCreateList = async (req, res) => {
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
+	return res.end(renderCreateList());
 };
 
 module.exports.renderList = async (req, res) => {
-	const list = await db.getById(req.params.id);
-	let data;
-	switch (list.type) {
-		case 1:
-			data = generateSimpleList(list);
-			break;
-		case 2:
-			data = generateTodoList(list);
-			break;
-		case 3:
-			data = generateComplexList(list);
-			break;
-		default:
-			throw new Error(ERROR_MESSAGES.UNKNOWN_TYPE);
-	}
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
-	return res.end(data);
-};
-
-module.exports.getDetails = async (req, res) => {
-	const { listId, id } = req.params;
-	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
-
-	const details = await db.getById(listId);
-	const item = details.data.find((i) => i.id.toString() === id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
-	return res.end(
-		JSON.stringify({
-			item,
-			fields: details.fields,
-		}),
-	);
+	const list = await db.getById(id);
+	if (!list) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
+	return res.end(renderList(list.name));
 };
 
-module.exports.getFields = async (req, res) => {
-	const { id } = req.params;
+module.exports.print = async (req, res) => {
+	const id = req.params.id;
 	if (!ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
 
-	const data = await db.getById(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
-	return res.end(JSON.stringify(data.fields));
+	const list = await db.getById(id);
+	if (!list) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+	res.writeHead(STATUS.OK, CONTENT_TYPE.PLAIN);
+	return res.end(generatePrint(list));
 };
 
-module.exports.create = async (req, res) => {
+module.exports.getLists = async (req, res) => {
+	const list = await db.getAll();
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
+	return res.end(JSON.stringify(list.map((i) => ({ id: i.id, name: i.name }))));
+};
+
+module.exports.createList = async (req, res) => {
+	const item = req.body;
+	await validateCreateList(item);
+	await db.createList({
+		_id: new ObjectId(),
+		data: [],
+		created: new Date().toJSON(),
+		...item,
+	});
+	res.writeHead(STATUS.CREATED);
+	return res.end();
+};
+
+module.exports.renameList = async (req, res) => {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+
+	await validateRenameList(req.body);
+	await db.renameList(id, req.body.name);
+	res.writeHead(STATUS.OK);
+	return res.end();
+};
+
+module.exports.deleteList = async (req, res) => {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+
+	await db.deleteList(id);
+	res.writeHead(STATUS.NO_CONTENT);
+	return res.end();
+};
+
+module.exports.getDetails = async (req, res) => {
+	const id = req.params.id;
+	if (!ObjectId.isValid(id)) {
+		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
+	}
+
+	const details = await db.getById(id);
+	if (!details) {
+		throw new Error(ERROR_MESSAGES.NO_LIST_ITEM);
+	}
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
+	return res.end(
+		JSON.stringify({
+			name: details.name,
+			type: details.type,
+			data: details.data,
+			view: details.view,
+			printView: details.printView,
+			fields: details.fields,
+			sort: details.sort,
+		}),
+	);
+};
+
+module.exports.createListItem = async (req, res) => {
 	const id = req.params.id;
 	if (!ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
@@ -143,15 +192,15 @@ module.exports.create = async (req, res) => {
 	validateCreateItem(item, details);
 
 	const newId = new ObjectId();
-	await db.create(id, { id: newId, ...item });
+	await db.createListItem(id, { id: newId, ...item });
 	await db.createAudit(
 		prepareAuditData(ACTIONS.CREATE, { ...item, id: newId, listId: id }),
 	);
-	res.writeHead(STATUS.OK);
+	res.writeHead(STATUS.CREATED);
 	return res.end();
 };
 
-module.exports.update = async (req, res) => {
+module.exports.updateListItem = async (req, res) => {
 	const { listId, id } = req.params;
 	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
@@ -159,38 +208,27 @@ module.exports.update = async (req, res) => {
 
 	const body = req.body;
 	const details = await db.getById(listId);
-	const action = validateUpdateItem(body, details);
-	let updatedData = await db.updateData(listId, id, body);
+	const action = await validateUpdateItem(body, details, id);
+	let updatedData = await db.updateListItemData(listId, id, body);
 	await db.createAudit(
 		prepareAuditData(action, { id, listId, body, updatedData }),
 	);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end();
 };
 
-module.exports.remove = async (req, res) => {
+module.exports.deleteListItem = async (req, res) => {
 	const { listId, id } = req.params;
 	if (!ObjectId.isValid(listId) || !ObjectId.isValid(id)) {
 		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
 	}
 
-	const deletedData = await db.delete(listId, id);
+	const deletedData = await db.deleteListItem(listId, id);
 	await db.createAudit(
 		prepareAuditData(ACTIONS.DELETE, { id, listId, ...deletedData.value }),
 	);
-	res.writeHead(STATUS.OK);
+	res.writeHead(STATUS.NO_CONTENT);
 	return res.end();
-};
-
-module.exports.print = async (req, res) => {
-	const id = req.params.id;
-	if (!ObjectId.isValid(id)) {
-		throw new Error(ERROR_MESSAGES.NOT_VALID_ID);
-	}
-
-	const list = await db.getById(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "text/html" });
-	return res.end(generatePrint(list));
 };
 
 module.exports.audits = async (req, res) => {
@@ -200,19 +238,6 @@ module.exports.audits = async (req, res) => {
 	}
 
 	const audits = await db.getHistory(id);
-	res.writeHead(STATUS.OK, { "Content-Type": "application/json" });
+	res.writeHead(STATUS.OK, CONTENT_TYPE.JSON);
 	return res.end(JSON.stringify(mapAudits(audits)));
-};
-
-module.exports.createList = async (req, res) => {
-	const item = req.body;
-	await validateCreateList(item)(db);
-	await db.createList({
-		_id: new ObjectId(),
-		data: [],
-		created: new Date().toJSON(),
-		...item,
-	});
-	res.writeHead(STATUS.OK);
-	return res.end();
 };
