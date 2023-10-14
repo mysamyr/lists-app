@@ -5,15 +5,15 @@ const {
 	renderHome,
 	renderCreateList,
 	renderList,
+	print,
+	getLists,
 	createList,
 	renameList,
 	deleteList,
 	getDetails,
-	getFields,
 	createListItem,
 	updateListItem,
 	deleteListItem,
-	print,
 	audits,
 	renderFile,
 } = require("./src/controller");
@@ -29,17 +29,20 @@ const server = http.createServer(async (req, res) => {
 
 	await router.createRouter([
 		router.get("/", renderHome)(req),
-		router.get("/list", renderCreateList)(req),
-		router.get("/list/:id", renderList)(req),
+		router.get("/create-list-page", renderCreateList)(req),
+		router.get("/list-page/:id", renderList)(req),
+		router.get("/print-list/:id", print)(req),
+
+		router.get("/list", getLists)(req),
 		router.post("/list", createList)(req),
 		router.put("/list/:id", renameList)(req),
 		router.delete("/list/:id", deleteList)(req),
-		router.get("/list/:listId/item/:id", getDetails)(req),
-		router.get("/list/:id/fields", getFields)(req),
+
+		router.get("/list/:id", getDetails)(req),
 		router.post("/list/:id", createListItem)(req),
 		router.put("/list/:listId/item/:id", updateListItem)(req),
 		router.delete("/list/:listId/item/:id", deleteListItem)(req),
-		router.get("/list/:id/print", print)(req),
+
 		router.get("/audits/:id", audits)(req),
 		router.get("/:file", renderFile)(req),
 	])(req, res);

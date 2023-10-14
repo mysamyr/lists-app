@@ -1,5 +1,5 @@
 const { ObjectId, MongoClient } = require("mongodb");
-const { MONGODB_URI, MONGODB_DB_NAME } = require("../config");
+const { MONGODB_URI, MONGODB_DB_NAME, NODE_ENV } = require("../config");
 
 const client = new MongoClient(MONGODB_URI);
 const connection = (module.exports.connection = {});
@@ -58,6 +58,7 @@ module.exports.getHistory = async (id) => {
 };
 
 module.exports.createAudit = async (item) => {
+	if (NODE_ENV === "development") return;
 	await connection.audits.insertOne(item);
 };
 

@@ -1,15 +1,14 @@
 const {
 	ACTIONS,
 	ERROR_MESSAGES,
-	MESSAGE_MIN_LENGTH,
-	MESSAGE_MAX_LENGTH,
-	LISTNAME_MIN_LENGTH,
-	LISTNAME_MAX_LENGTH,
+	NAME_MIN_LENGTH,
+	NAME_MAX_LENGTH,
 	FIELDS,
 	FIELD_TYPES,
 	LIST_TYPES,
 } = require("./constants");
 const { getViewFields } = require("./helper");
+const { getListByName } = require("./database");
 
 const validateFields = (fields) => {
 	const checkedSet = new Set();
@@ -65,41 +64,30 @@ const validateFields = (fields) => {
 	}
 };
 
-const isViewValid = (schema, fields) => {
-	const schemaItems = getViewFields(schema);
-	for (let field of schemaItems) {
-		if (!fields.find((i) => i.name === field)) return false;
+const validateName = async (body, data) => {
+	if (
+		!body.hasOwnProperty(FIELDS.NAME) ||
+		typeof body.name !== FIELD_TYPES.STRING
+	) {
+		throw new Error("Відсутня назва списку (name: string)");
 	}
-	return true;
+	if (
+		body.name.length < NAME_MIN_LENGTH ||
+		body.name.length > NAME_MAX_LENGTH
+	) {
+		throw new Error(
+			`Назва списку має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`,
+		);
+	}
+	if (
+		(data && data.find((i) => i.name === body.name)) ||
+		(await getListByName(body.name))
+	) {
+		throw new Error("Список з такою назвою вже існує");
+	}
 };
 
-module.exports.validateCreateItem = (
-	body,
-	{ type: listType, fields, data },
-) => {
-	if (!body) {
-		throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
-	}
-	if (listType === LIST_TYPES.SIMPLE || listType === LIST_TYPES.TODO) {
-		if (!body.hasOwnProperty(FIELDS.MESSAGE)) {
-			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
-		}
-		if (listType === LIST_TYPES.TODO && !body.hasOwnProperty(FIELDS.COMPLETE)) {
-			throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
-		}
-		const message = body.message;
-		if (
-			typeof message !== FIELD_TYPES.STRING ||
-			message.length < MESSAGE_MIN_LENGTH ||
-			message.length > MESSAGE_MAX_LENGTH
-		) {
-			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
-		}
-		if (data.find((i) => i.message === message)) {
-			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
-		}
-		return;
-	}
+const validateUniqueFieldsCombination = (body, { fields, data }) => {
 	fields.forEach(({ name, description, type, min, max }) => {
 		if (!body.hasOwnProperty(name)) {
 			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE_(description));
@@ -140,12 +128,50 @@ module.exports.validateCreateItem = (
 	}
 };
 
-module.exports.validateUpdateItem = (body, { data }) => {
+const isViewValid = (schema, fields) => {
+	const schemaItems = getViewFields(schema);
+	for (let field of schemaItems) {
+		if (!fields.find((i) => i.name === field)) return false;
+	}
+	return true;
+};
+
+module.exports.validateCreateItem = (body, { type, fields, data }) => {
+	if (!body) {
+		throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
+	}
+	if (type === LIST_TYPES.SIMPLE || type === LIST_TYPES.TODO) {
+		if (!body.hasOwnProperty(FIELDS.NAME)) {
+			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
+		}
+		if (type === LIST_TYPES.TODO && !body.hasOwnProperty(FIELDS.COMPLETE)) {
+			throw new Error(ERROR_MESSAGES.NO_CREATION_DATA);
+		}
+		const name = body.name;
+		if (
+			typeof name !== FIELD_TYPES.STRING ||
+			name.length < NAME_MIN_LENGTH ||
+			name.length > NAME_MAX_LENGTH
+		) {
+			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
+		}
+		if (data.find((i) => i.name === name)) {
+			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
+		}
+		return;
+	}
+	validateUniqueFieldsCombination(body, { fields, data });
+};
+
+module.exports.validateUpdateItem = async (
+	body,
+	{ type, fields, data },
+	id,
+) => {
 	if (
 		!body ||
 		(!body.hasOwnProperty(FIELDS.COUNT) &&
 			!body.hasOwnProperty(FIELDS.NAME) &&
-			!body.hasOwnProperty(FIELDS.MESSAGE) &&
 			!body.hasOwnProperty(FIELDS.COMPLETE))
 	) {
 		throw new Error("Відсутні дані");
@@ -159,37 +185,33 @@ module.exports.validateUpdateItem = (body, { data }) => {
 	if (body.hasOwnProperty(FIELDS.NAME)) {
 		if (
 			typeof body.name !== FIELD_TYPES.STRING ||
-			body.name.length < MESSAGE_MIN_LENGTH ||
-			body.name.length > MESSAGE_MAX_LENGTH
+			body.name.length < NAME_MIN_LENGTH ||
+			body.name.length > NAME_MAX_LENGTH
 		) {
 			throw new Error(
-				`Назва має включати від ${MESSAGE_MIN_LENGTH} до ${MESSAGE_MAX_LENGTH} символів`,
+				`Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`,
+			);
+		}
+		if (type === LIST_TYPES.SIMPLE || type === LIST_TYPES.TODO) {
+			await validateName(body, data);
+		} else {
+			const item = data.find((i) => i.id.toString() === id);
+			validateUniqueFieldsCombination(
+				{ ...item, name: body.name },
+				{ fields, data },
 			);
 		}
 		return ACTIONS.RENAME;
 	}
-	if (body.hasOwnProperty(FIELDS.MESSAGE)) {
-		if (
-			typeof body.message !== FIELD_TYPES.STRING ||
-			body.message.length < MESSAGE_MIN_LENGTH ||
-			body.message.length > MESSAGE_MAX_LENGTH
-		) {
-			throw new Error(ERROR_MESSAGES.NOT_VALID_MESSAGE);
-		}
-		if (data.find((i) => i.message === body.message)) {
-			throw new Error(ERROR_MESSAGES.NOT_UNIQUE);
-		}
-		return ACTIONS.CHANGE_MESSAGE;
-	}
 	if (body.hasOwnProperty(FIELDS.COMPLETE)) {
 		if (typeof body.complete !== FIELD_TYPES.BOOLEAN) {
-			throw new Error(ERROR_MESSAGES.NO_MESSAGE);
+			throw new Error(ERROR_MESSAGES.NOT_VALID_TYPE);
 		}
 		return ACTIONS.COMPLETE;
 	}
 };
 
-module.exports.validateCreateList = (body) => async (db) => {
+module.exports.validateCreateList = async (body) => {
 	if (!body) {
 		throw new Error("Відсутнє тіло запиту");
 	}
@@ -206,23 +228,7 @@ module.exports.validateCreateList = (body) => async (db) => {
 	) {
 		throw new Error("Неправильний тип списку");
 	}
-	if (
-		!body.hasOwnProperty(FIELDS.NAME) ||
-		typeof body.name !== FIELD_TYPES.STRING
-	) {
-		throw new Error("Відсутня назва списку (name: string)");
-	}
-	if (
-		body.name.length < LISTNAME_MIN_LENGTH ||
-		body.name.length > LISTNAME_MAX_LENGTH
-	) {
-		throw new Error(
-			`Назва списку має включати від ${LISTNAME_MIN_LENGTH} до ${LISTNAME_MAX_LENGTH} символів`,
-		);
-	}
-	if (await db.getListByName(body.name)) {
-		throw new Error("Список з такою назвою вже існує");
-	}
+	await validateName(body);
 	if (body.type === LIST_TYPES.SIMPLE || body.type === LIST_TYPES.TODO) {
 		if (Object.keys(body).length > 2) {
 			throw new Error("Неправильні дані для створення списку");
@@ -271,25 +277,9 @@ module.exports.validateCreateList = (body) => async (db) => {
 	}
 };
 
-module.exports.validateRenameList = (body) => async (db) => {
+module.exports.validateRenameList = async (body) => {
 	if (!body) {
 		throw new Error("Відсутнє тіло запиту");
 	}
-	if (
-		!body.hasOwnProperty(FIELDS.NAME) ||
-		typeof body.name !== FIELD_TYPES.STRING
-	) {
-		throw new Error("Відсутня назва списку (name: string)");
-	}
-	if (
-		body.name.length < LISTNAME_MIN_LENGTH ||
-		body.name.length > LISTNAME_MAX_LENGTH
-	) {
-		throw new Error(
-			`Назва списку має включати від ${LISTNAME_MIN_LENGTH} до ${LISTNAME_MAX_LENGTH} символів`,
-		);
-	}
-	if (await db.getListByName(body.name)) {
-		throw new Error("Список з такою назвою вже існує");
-	}
+	await validateName(body);
 };

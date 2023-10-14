@@ -24,46 +24,28 @@ const generateMeta = ({
 ];
 const generateHeader = (text) => `<h1>${text}</h1>`;
 
-const addBtn = `<div class="add-item">+</div>`;
-const backBtn = `<a href="/" class="btn">Назад</a>`;
-const dialog = `<dialog></dialog>`;
-const noContent = `<p>Немає нічого</p>`;
-
-const listMapper = ({ name, id }) =>
-	`<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
-const listItemMapper = (data, schema) =>
-	`<li data-id="${data.id}" data-name="${
-		data.name || data.message
-	}"><span class="${data.complete ? "completed" : ""}">${getView(
-		data,
-		schema,
-	)}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
 const printMapper = (data, schema) => `<p>${getView(data, schema)}</p>`;
 
-module.exports.generateHome = (list) => {
-	const [start, end] = generateMeta({
-		title: "Список",
+module.exports.renderHome = () => {
+	const html = generateMeta({
+		title: "Lister",
 		stylesheets: ["styles.css"],
 		scripts: ["home.js"],
 	});
 
-	const sortedList = sortByValue(list);
-
-	const header = generateHeader("Списки");
-	const content = sortedList.map(listMapper);
-	const marginBottom = `<div class="margin-bottom"></div>`;
-
-	return [
-		start,
-		header,
-		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
-		marginBottom,
-		addBtn,
-		dialog,
-		end,
-	].join("");
+	return html.join("");
 };
-module.exports.generateCreateList = () => {
+module.exports.renderList = (name) => {
+	const html = generateMeta({
+		title: name,
+		stylesheets: ["styles.css"],
+		scripts: ["list.js"],
+	});
+
+	return html.join("");
+};
+
+module.exports.renderCreateList = () => {
 	const [start, end] = generateMeta({
 		title: "Створити список",
 		stylesheets: ["styles.css"],
@@ -72,7 +54,9 @@ module.exports.generateCreateList = () => {
 
 	const header = generateHeader("Створити новий список");
 
-	const typeSection = `<h2>Виберіть тип списку</h2><label><input name="type" type="radio" value="1">Простий список</label>
+	const backBtn = `<a href="/" class="btn">Назад</a>`;
+	const typeSection = `<h2>Виберіть тип списку</h2>
+		<label><input name="type" type="radio" value="1">Простий список</label>
 		<label><input name="type" type="radio" value="2">Список справ</label>
 		<label><input name="type" type="radio" value="3">Комплексний список</label>`;
 	const nameSection = `<input name="name" type="text" placeholder="Введіть назву">`;
@@ -93,86 +77,6 @@ module.exports.generateCreateList = () => {
 	].join("");
 };
 
-module.exports.generateSimpleList = (list) => {
-	const [start, end] = generateMeta({
-		title: list.name,
-		stylesheets: ["styles.css"],
-		scripts: ["simple-list.js"],
-	});
-
-	const sortedList = sortByValue(list.data, "message");
-
-	const header = generateHeader(`<b>${list.name}</b>`);
-	const content = sortedList.map((i) => listItemMapper(i));
-	const marginBottom = `<div class="margin-bottom"></div>`;
-
-	return [
-		start,
-		`<div class="row">`,
-		header,
-		backBtn,
-		`</div>`,
-		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
-		marginBottom,
-		addBtn,
-		dialog,
-		end,
-	].join("");
-};
-module.exports.generateTodoList = (list) => {
-	const [start, end] = generateMeta({
-		title: list.name,
-		stylesheets: ["styles.css"],
-		scripts: ["todo-list.js"],
-	});
-
-	const sortedList = sortByValue(list.data, "message");
-
-	const header = generateHeader(`<b>${list.name}</b>`);
-	const content = sortedList.map((i) => listItemMapper(i));
-	const marginBottom = `<div class="margin-bottom"></div>`;
-
-	return [
-		start,
-		`<div class="row">`,
-		header,
-		backBtn,
-		`</div>`,
-		content.length ? `<ul>${content.join("\n")}</ul>` : noContent,
-		marginBottom,
-		addBtn,
-		dialog,
-		end,
-	].join("");
-};
-module.exports.generateComplexList = (list) => {
-	const [start, end] = generateMeta({
-		title: list.name,
-		stylesheets: ["styles.css"],
-		scripts: ["complex-list.js"],
-	});
-
-	const sortedList = sortByValue(list.data, list.sort);
-
-	const header = generateHeader(`<b>${list.name}</b>`);
-	const content = sortedList.map((i) => listItemMapper(i, list.view));
-	const btns = `<div class="btns margin-bottom">
-        <a href="/list/${list._id.toString()}/print" class="btn">Показати список</a>
-    </div>`;
-
-	return [
-		start,
-		`<div class="row">`,
-		header,
-		backBtn,
-		`</div>`,
-		content.length ? `<ul>${content.join("\n")}</ul>${btns}` : noContent,
-		addBtn,
-		dialog,
-		end,
-	].join("");
-};
-
 module.exports.generatePrint = ({ data, name, _id, printView, sort }) => {
 	const [start, end] = generateMeta({
 		title: "Список",
@@ -183,7 +87,7 @@ module.exports.generatePrint = ({ data, name, _id, printView, sort }) => {
 
 	const header = generateHeader(`<b>${name}</b>`);
 	const content = sortedList.map((i) => printMapper(i, printView)).join("\n");
-	const backBtn = `<a href="/list/${_id.toString()}" class="btn">Назад</a>`;
+	const backBtn = `<a href="/list-page/${_id.toString()}" class="btn">Назад</a>`;
 
 	return [
 		start,

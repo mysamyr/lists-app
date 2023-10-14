@@ -6,7 +6,7 @@ const simpleList = {
 	data: [
 		{
 			id: "ObjectId",
-			message: "list item message",
+			name: "list item message",
 		},
 	],
 };
@@ -18,7 +18,7 @@ const todoList = {
 	data: [
 		{
 			id: "ObjectId",
-			message: "list item message",
+			name: "list item message",
 			complete: true,
 		},
 	],

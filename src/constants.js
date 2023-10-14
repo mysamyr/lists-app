@@ -1,13 +1,9 @@
-module.exports.LISTNAME_MIN_LENGTH = 3;
-module.exports.LISTNAME_MAX_LENGTH = 30;
-
-module.exports.MESSAGE_MIN_LENGTH = 3;
-module.exports.MESSAGE_MAX_LENGTH = 50;
+module.exports.NAME_MIN_LENGTH = 3;
+module.exports.NAME_MAX_LENGTH = 50;
 
 module.exports.ACTIONS = {
 	CREATE: "create",
 	RENAME: "rename",
-	CHANGE_MESSAGE: "change_message",
 	COMPLETE: "complete",
 	CHANGE_NUMBER: "change_number",
 	DELETE: "delete",
@@ -37,7 +33,6 @@ module.exports.FIELDS = {
 	MIN: "min",
 	MAX: "max",
 	POSTFIX: "postfix",
-	MESSAGE: "message",
 	COMPLETE: "complete",
 	COUNT: "count",
 	VIEW: "view",
@@ -61,9 +56,10 @@ module.exports.ERROR_MESSAGES = {
 	INTERNAL_SERVER_ERROR: "Internal Server Error",
 	NOT_VALID_ID: "Відісланий ідентифікатор неправильний",
 	UNKNOWN_TYPE: "Тип списку невідомий",
+	NO_LIST_ITEM: "Відсутній елемент списку",
 	NO_CREATION_DATA: "Відсутні дані для створення",
 	NO_MESSAGE: "Відсутній вміст",
-	NOT_VALID_MESSAGE: `Елемент списку має включати від ${module.exports.MESSAGE_MIN_LENGTH} до ${module.exports.MESSAGE_MAX_LENGTH} символів`,
+	NOT_VALID_MESSAGE: `Елемент списку має включати від ${module.exports.NAME_MIN_LENGTH} до ${module.exports.NAME_MAX_LENGTH} символів`,
 	NOT_VALID_TYPE: "Неправильний тип поля елементу списку",
 	NOT_VALID_MESSAGE_: (description) => `Відсутнє поле ${description}`,
 	NOT_VALID_STRING_: ({ description, min, max }) =>

@@ -1,7 +1,64 @@
 const NAME_MIN_LENGTH = 3;
 const NAME_MAX_LENGTH = 30;
+const URLS = {
+	HOME: "/",
+	GET_LISTS: "/list",
+	CREATE: "/create-list-page",
+	RENAME_$(id) {
+		return `/list/${id}`;
+	},
+	DELETE_$(id) {
+		return `/list/${id}`;
+	},
+	GET_LIST_$(id) {
+		return `/list-page/${id}`;
+	},
+};
 
-window.addEventListener("DOMContentLoaded", function () {
+function sortByName(arr) {
+	return arr.sort((x, y) => {
+		if (x.name < y.name) return -1;
+		if (x.name > y.name) return 1;
+		return 0;
+	});
+}
+
+function logError(msg) {
+	// eslint-disable-next-line no-console
+	console.error(msg);
+}
+
+function validateName(name, oldName) {
+	if (!name || name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
+		return `Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`;
+	}
+	if (oldName && name === oldName) {
+		return "Новий елемент не змінився";
+	}
+}
+
+window.addEventListener("DOMContentLoaded", async function () {
+	const body = document.querySelector("body");
+	await fetch(URLS.GET_LISTS, { method: "GET" })
+		.then(async function (data) {
+			return data.json();
+		})
+		.then(async function (lists) {
+			const content = sortByName(lists).map(function ({ name, id }) {
+				return `<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
+			});
+			body.innerHTML = `<h1>Списки</h1>
+				${content.length ? `<ul>${content.join("\n")}</ul>` : "<p>Немає нічого</p>"}
+				<div class="margin-bottom"></div>
+				<div class="add-item">+</div>
+				<dialog></dialog>`;
+		})
+		.catch(function (e) {
+			logError(e.message);
+			body.innerHTML = `<h1>Сталася помилка</h1><a href="/">Обновити</a>`;
+			alert(e.message);
+		});
+
 	const list = document.querySelectorAll("li");
 	const dialog = document.querySelector("dialog");
 	const addItemBtn = document.querySelector(".add-item");
@@ -11,29 +68,11 @@ window.addEventListener("DOMContentLoaded", function () {
 		dialog.close();
 	}
 
-	function logError(msg) {
-		// eslint-disable-next-line no-console
-		console.error(msg);
-	}
-
-	function validateName(name, oldName) {
-		if (
-			!name ||
-			name.length < NAME_MIN_LENGTH ||
-			name.length > NAME_MAX_LENGTH
-		) {
-			return `Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`;
-		}
-		if (oldName && name === oldName) {
-			return "Новий елемент не змінився";
-		}
-	}
-
 	async function renameList(id, oldName) {
 		const name = document.querySelector("input");
 		const error = validateName(name.value, oldName);
 		if (error) return alert(error);
-		await fetch(`/list/${id}`, {
+		await fetch(URLS.RENAME_$(id), {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -46,7 +85,7 @@ window.addEventListener("DOMContentLoaded", function () {
 					throw new Error(res.error);
 				}
 				closeDialog();
-				location.href = `/`;
+				location.href = URLS.HOME;
 			})
 			.catch(function (e) {
 				logError(e.message);
@@ -55,13 +94,13 @@ window.addEventListener("DOMContentLoaded", function () {
 	}
 
 	async function deleteList(id) {
-		await fetch(`/list/${id}`, { method: "DELETE" })
+		await fetch(URLS.DELETE_$(id), { method: "DELETE" })
 			.then(async function (data) {
 				if (!data.ok) {
 					const res = await data.json();
 					throw new Error(res.error);
 				}
-				location.href = `/`;
+				location.href = URLS.HOME;
 			})
 			.catch(function (e) {
 				logError(e.message);
@@ -123,11 +162,11 @@ window.addEventListener("DOMContentLoaded", function () {
 			if (e.target.id === "delete") {
 				return await openDelete(id, name);
 			}
-			return location.replace(`/list/${id}`);
+			return (location.href = URLS.GET_LIST_$(id));
 		});
 	});
 	addItemBtn.addEventListener("click", async function () {
-		return location.replace(`/list`);
+		return (location.href = URLS.CREATE);
 	});
 	dialog.addEventListener("click", function (e) {
 		const dialogDimensions = dialog.getBoundingClientRect();

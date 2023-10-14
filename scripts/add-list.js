@@ -36,7 +36,7 @@ const sort = {}; // empty for sorting by name
 	await db.connect();
 
 	if (type === 1) {
-		await db.connection.lists.insertOne({
+		await db.createList({
 			_id: new ObjectId(),
 			name,
 			type,
@@ -46,7 +46,7 @@ const sort = {}; // empty for sorting by name
 		return;
 	}
 	if (type === 2) {
-		await db.connection.lists.insertOne({
+		await db.createList({
 			_id: new ObjectId(),
 			name,
 			type,
@@ -62,9 +62,9 @@ const sort = {}; // empty for sorting by name
 		fields: fieldSchema,
 		view: renderViewSchema,
 		printView: printViewSchema,
-	})(db);
+	});
 
-	await db.connection.lists.insertOne({
+	await db.createList({
 		_id: new ObjectId(),
 		name,
 		type,

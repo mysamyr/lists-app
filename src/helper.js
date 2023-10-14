@@ -60,13 +60,6 @@ module.exports.prepareAuditData = (action, data) => {
 				after: data.body.count,
 			};
 			break;
-		case ACTIONS.CHANGE_MESSAGE:
-			res = {
-				name: data.updatedData.value.name,
-				before: data.updatedData.value.message,
-				after: data.body.message,
-			};
-			break;
 		case ACTIONS.COMPLETE:
 			res = {
 				name: data.updatedData.value.name,
@@ -95,7 +88,7 @@ module.exports.prepareAuditData = (action, data) => {
 module.exports.mapAudits = (list) => list.map(({ _id, ...data }) => data);
 
 module.exports.getView = (data, schema) => {
-	if (!schema) return data.message;
+	if (!schema) return data.name;
 	let result = "";
 	let field = null;
 	for (let l of schema) {
