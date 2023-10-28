@@ -1,84 +1,19 @@
-const NAME_MIN_LENGTH = 3;
-const NAME_MAX_LENGTH = 30;
-const URLS = {
-	HOME: "/",
-	GET_LISTS: "/list",
-	CREATE: "/create-list-page",
-	RENAME_$(id) {
-		return `/list/${id}`;
-	},
-	DELETE_$(id) {
-		return `/list/${id}`;
-	},
-	GET_LIST_$(id) {
-		return `/list-page/${id}`;
-	},
-};
-
-async function getRequest(url, func) {
-	return fetch(url, { method: "GET", cache: "no-cache" })
-		.then(func)
-		.catch(function (e) {
-			logError(e.message);
-			document.querySelector(
-				"body",
-			).innerHTML = `<h1>Сталася помилка</h1><a href="/">Обновити</a>`;
-			alert(e.message);
-		});
-}
-
-async function putRequest(url, body, func) {
-	return fetch(url, {
-		method: "PUT",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(body),
-	})
-		.then(func)
-		.catch(function (e) {
-			logError(e.message);
-			alert(e.message);
-		});
-}
-
-async function deleteRequest(url, func) {
-	return fetch(url, { method: "DELETE" })
-		.then(func)
-		.catch(function (e) {
-			logError(e.message);
-			alert(e.message);
-		});
-}
-
-function sortByName(arr) {
-	return arr.sort((x, y) => {
-		if (x.name < y.name) return -1;
-		if (x.name > y.name) return 1;
-		return 0;
-	});
-}
-
-function logError(msg) {
-	// eslint-disable-next-line no-console
-	console.error(msg);
-}
-
-function validateName(name, oldName) {
-	if (!name || name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
-		return `Назва має включати від ${NAME_MIN_LENGTH} до ${NAME_MAX_LENGTH} символів`;
-	}
-	if (oldName && name === oldName) {
-		return "Новий елемент не змінився";
-	}
-}
+import { LIST_LENGTH, URLS } from "./constants";
+import {
+	getRequest,
+	putRequest,
+	deleteRequest,
+	sortByValue,
+	validateName,
+	handleDialogClose,
+} from "./helpers";
 
 window.addEventListener("DOMContentLoaded", async function () {
 	const body = document.querySelector("body");
 
 	await getRequest(URLS.GET_LISTS, async function (data) {
 		const lists = await data.json();
-		const content = sortByName(lists).map(function ({ name, id }) {
+		const content = sortByValue(lists).map(function ({ name, id }) {
 			return `<li data-id="${id}"><span>${name}</span><div><span id="edit" class="icon">~</span><span id="delete" class="icon">&times;</span></div></li>`;
 		});
 		body.innerHTML = `<h1>Списки</h1>
@@ -102,7 +37,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 		const error = validateName(name.value, oldName);
 		if (error) return alert(error);
 		await putRequest(
-			URLS.RENAME_$(id),
+			URLS.RENAME_LIST_$(id),
 			{ name: name.value },
 			async function (data) {
 				if (!data.ok) {
@@ -116,7 +51,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 	}
 
 	async function deleteList(id) {
-		await deleteRequest(URLS.DELETE_$(id), async function (data) {
+		await deleteRequest(URLS.DELETE_LIST_$(id), async function (data) {
 			if (!data.ok) {
 				const res = await data.json();
 				throw new Error(res.error);
@@ -128,7 +63,7 @@ window.addEventListener("DOMContentLoaded", async function () {
 	async function openRename(id, oldName) {
 		dialog.innerHTML = `
     <form class="modal-form">
-      <input type="text" maxlength="${NAME_MAX_LENGTH}" value="${oldName}">
+      <input type="text" maxlength="${LIST_LENGTH.MAX}" value="${oldName}">
       <div class="btns">
         <div class="btn green">Зберегти</div>
         <div class="btn red">Скасувати</div>
@@ -178,26 +113,11 @@ window.addEventListener("DOMContentLoaded", async function () {
 			if (e.target.id === "delete") {
 				return await openDelete(id, name);
 			}
-			return (location.href = URLS.GET_LIST_$(id));
+			return (location.href = URLS.LIST_PAGE_$(id));
 		});
 	});
 	addItemBtn.addEventListener("click", async function () {
-		return (location.href = URLS.CREATE);
+		return (location.href = URLS.CREATE_LIST);
 	});
-	dialog.addEventListener("click", function (e) {
-		const dialogDimensions = dialog.getBoundingClientRect();
-		if (
-			dialog.open &&
-			(e.clientX < dialogDimensions.left ||
-				e.clientX > dialogDimensions.right ||
-				e.clientY < dialogDimensions.top ||
-				e.clientY > dialogDimensions.bottom)
-		) {
-			closeDialog();
-		}
-	});
-	dialog.addEventListener("keydown", function (e) {
-		if (e.code === "Escape" && dialog.open) closeDialog();
-		if (e.code === "Enter" && dialog.open) e.preventDefault();
-	});
+	handleDialogClose(dialog, closeDialog);
 });

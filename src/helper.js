@@ -30,6 +30,9 @@ module.exports.determineContentType = (url) => {
 		case ".ico":
 			contentType = "image/x-icon";
 			break;
+		case ".svg":
+			contentType = "image/svg+xml";
+			break;
 		default:
 			contentType = "text/html";
 	}

@@ -1,5 +1,5 @@
 const { ObjectId, MongoClient } = require("mongodb");
-const { MONGODB_URI, MONGODB_DB_NAME, NODE_ENV } = require("../config");
+const { MONGODB_URI, MONGODB_DB_NAME, NODE_ENV } = process.env;
 
 const client = new MongoClient(MONGODB_URI);
 const connection = (module.exports.connection = {});

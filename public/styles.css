@@ -60,8 +60,16 @@ dialog::backdrop {
 .row {
 	display: flex;
 	flex-direction: row;
-	justify-content: space-between;
 	align-items: center;
+}
+
+.header {
+	justify-content: space-between;
+}
+
+#back,
+#sort {
+	padding: 0 10px;
 }
 
 .btns {

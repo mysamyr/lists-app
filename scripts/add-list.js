@@ -19,6 +19,7 @@ const fieldSchema = [
 		type: "number",
 		min: 0.1,
 		max: 3,
+		postfix: " л.",
 	},
 	{
 		name: "count",

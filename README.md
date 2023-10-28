@@ -22,8 +22,13 @@ There are 3 types with lists: **Simple**, **Todo** and **Complex** lists. All li
 
 **Simple** lists contains only messages.
 
-**Todo** lists have messages and possibility to mark them done.
+**Todo** lists have messages and possibility to mark them as completed.
 
 **Complex** list items includes different fields (e.g. `name`, `count`, etc.). Field `name` is obligatory, if field `count` is present you can manage count of list items in list.
 
 Messages have limitations to 50 characters. Count cannot be negative
+
+## Tips
+
+If you don't have access to file system on your deployment machine, don't set `NODE_ENV = production` manually.
+This will not install your devDependencies and will fail webpack bundling process.

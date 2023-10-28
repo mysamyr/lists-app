@@ -1,3 +1,4 @@
+require("./src/dotenv").config();
 const http = require("http");
 const {
 	attachBody,
@@ -15,13 +16,11 @@ const {
 	updateListItem,
 	deleteListItem,
 	audits,
-	renderFile,
 } = require("./src/controller");
 const { connect } = require("./src/database");
 const router = require("./src/router");
-const { PORT } = require("./config");
 
-const port = PORT || 3000;
+const port = process.env.PORT || 3000;
 
 const server = http.createServer(async (req, res) => {
 	await attachBody(req);
@@ -44,7 +43,6 @@ const server = http.createServer(async (req, res) => {
 		router.delete("/list/:listId/item/:id", deleteListItem)(req),
 
 		router.get("/audits/:id", audits)(req),
-		router.get("/:file", renderFile)(req),
 	])(req, res);
 });
 

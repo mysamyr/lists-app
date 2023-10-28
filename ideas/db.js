@@ -32,7 +32,7 @@ const complexList = {
 		{
 			id: "ObjectId",
 			name: "list item name",
-			count: 42,
+			count: 42, // optional
 			// other fields according to `fields` configuration
 		},
 	],
@@ -45,6 +45,7 @@ const complexList = {
 			type: "string | number",
 			min: 3,
 			max: 99,
+			prefix: "prefix for field display", // optional
 			postfix: "postfix for field display", // optional
 		},
 	],

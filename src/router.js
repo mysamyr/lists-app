@@ -1,4 +1,5 @@
 const { CONTENT_TYPE, STATUS, METHOD } = require("./enums");
+const { renderFile } = require("./controller");
 
 const requestHandler = (path, method, req, fn) => {
 	// ignore query, only params
@@ -41,6 +42,9 @@ module.exports.createRouter = (controllers) => async (req, res) => {
 				await controller(req, res);
 				if (res.finished) break;
 			}
+		}
+		if (!res.finished) {
+			renderFile(req, res);
 		}
 	} catch (e) {
 		// eslint-disable-next-line no-console

@@ -22,7 +22,12 @@ const generateMeta = ({
    </html>
   `,
 ];
-const generateHeader = (text) => `<h1>${text}</h1>`;
+const generateHeader = (header, backURL) => `<div class="row">
+		<div id="back" onclick="location.href='${backURL}'">
+			<img src="/img/back-arrow.svg" height="24" alt="back"/>
+		</div>
+		<h1>${header}</h1>
+	</div>`;
 
 const printMapper = (data, schema) => `<p>${getView(data, schema)}</p>`;
 
@@ -30,7 +35,7 @@ module.exports.renderHome = () => {
 	const html = generateMeta({
 		title: "Lister",
 		stylesheets: ["styles.css"],
-		scripts: ["home.js"],
+		scripts: ["dist/home.js"],
 	});
 
 	return html.join("");
@@ -39,7 +44,7 @@ module.exports.renderList = (name) => {
 	const html = generateMeta({
 		title: name,
 		stylesheets: ["styles.css"],
-		scripts: ["list.js"],
+		scripts: ["dist/list.js"],
 	});
 
 	return html.join("");
@@ -49,14 +54,13 @@ module.exports.renderCreateList = () => {
 	const [start, end] = generateMeta({
 		title: "Створити список",
 		stylesheets: ["styles.css"],
-		scripts: ["create-list.js"],
+		scripts: ["dist/create-list.js"],
 	});
 
-	const header = generateHeader("Створити новий список");
+	const header = generateHeader("Створити новий список", "/");
 
-	const backBtn = `<a href="/" class="btn">Назад</a>`;
 	const typeSection = `<h2>Виберіть тип списку</h2>
-		<label><input name="type" type="radio" value="1">Простий список</label>
+		<label><input name="type" type="radio" value="1" checked>Простий список</label>
 		<label><input name="type" type="radio" value="2">Список справ</label>
 		<label><input name="type" type="radio" value="3">Комплексний список</label>`;
 	const nameSection = `<input name="name" type="text" placeholder="Введіть назву">`;
@@ -64,10 +68,7 @@ module.exports.renderCreateList = () => {
 
 	return [
 		start,
-		`<div class="row">`,
 		header,
-		backBtn,
-		`</div>`,
 		`<form>`,
 		typeSection,
 		nameSection,
@@ -85,19 +86,10 @@ module.exports.generatePrint = ({ data, name, _id, printView, sort }) => {
 
 	const sortedList = sortByValue(data, sort);
 
-	const header = generateHeader(`<b>${name}</b>`);
+	const header = generateHeader(name, `/list-page/${_id.toString()}`);
 	const content = sortedList.map((i) => printMapper(i, printView)).join("\n");
-	const backBtn = `<a href="/list-page/${_id.toString()}" class="btn">Назад</a>`;
 
-	return [
-		start,
-		`<div class="row">`,
-		header,
-		backBtn,
-		`</div>`,
-		content,
-		end,
-	].join("");
+	return [start, header, content, end].join("");
 };
 
 module.exports.generate404 = () => {
@@ -105,8 +97,7 @@ module.exports.generate404 = () => {
 		title: "Сторінка не знайдена",
 	});
 
-	const header = generateHeader("Сторінка не знайдена");
-	const backBtn = `<a href="/" class="btn">На головну</a>`;
+	const header = generateHeader("Сторінка не знайдена", "/");
 
-	return [start, header, backBtn, end].join("");
+	return [start, header, end].join("");
 };
