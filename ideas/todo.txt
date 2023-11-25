@@ -1,11 +1,14 @@
-rewrite css default selectors to classes
+fix breadcrumbs issue on entering specific list url - fixed by redirecting to home page
+create list without items => set only config with name
 
-add sorting on the client
+-------------------------------------------------
 
-add create feature for lists - create diagram with steps
-
-? add possibility to not show some fields (fields.show: bool) - reason???
-? change list configuration
 add authorisation
+add config pages
+add possibility to edit fields (not only name/count/completed)
+refactoring
+do we need to restrict max count?
 
-* analyze and brainstorm repetitive todo lists feature
+-------------------------------------------------
+
+Архітектура = Синтаксис + сутності + конфігурація
