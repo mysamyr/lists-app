@@ -4,31 +4,21 @@
   "description": "Application, that helps you with creating simple lists, todo lists and do accounting",
   "private": true,
   "scripts": {
-    "build": "webpack --config webpack.prod.js",
-    "build:dev": "webpack --config webpack.dev.js",
-    "start": "npm run build && node index.js",
-    "start:dev": "nodemon index.js",
-    "add-list": "node scripts/add-list.js",
-    "update-list": "node scripts/update-list.js",
     "format": "prettier --write ./",
     "check-quality": "eslint ./",
     "prepare": "husky install"
   },
   "keywords": [
     "list",
-    "todo list"
+    "todo list",
+    "lister app"
   ],
   "author": "Mysamyr",
   "license": "ISC",
-  "dependencies": {
-    "mongodb": "^5.8.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "eslint": "^8.50.0",
     "husky": "^8.0.3",
-    "nodemon": "^3.0.1",
-    "prettier": "^3.0.3",
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "prettier": "^3.0.3"
   }
 }

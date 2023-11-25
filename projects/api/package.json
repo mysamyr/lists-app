@@ -1,0 +1,23 @@
+{
+  "name": "lister-app-api",
+  "version": "1.0.0",
+  "description": "API for Lister App",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "start:dev": "nodemon index.js",
+    "create-lists": "node scripts/copy-lists.js"
+  },
+  "keywords": [],
+  "author": "Mysamyr",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "mongodb": "^5.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
