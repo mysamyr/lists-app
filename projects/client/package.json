@@ -1,0 +1,22 @@
+{
+  "name": "lister-app-client",
+  "version": "1.0.0",
+  "description": "Client for Lister App",
+  "private": true,
+  "scripts": {
+    "build": "webpack --config webpack.prod.js",
+    "build:dev": "webpack --config webpack.dev.js",
+    "start": "npm run build && node server.js",
+    "start:dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "Mysamyr",
+  "license": "ISC",
+  "dependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
