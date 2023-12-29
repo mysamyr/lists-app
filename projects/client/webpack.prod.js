@@ -1,7 +1,13 @@
 "use strict";
-const common = require("./webpack.common");
 
 module.exports = {
-	...common,
+	entry: "./src/index.js",
+	output: {
+		filename: "index.js",
+		path: require("path").resolve(__dirname, "public", "dist"),
+	},
+	module: {
+		rules: [],
+	},
 	mode: "production",
 };
