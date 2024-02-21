@@ -90,5 +90,6 @@ export default ({ fields, sort = "name", direction }) => {
 	);
 
 	dialog.appendChild(form);
+	dialog.classList.add("modal");
 	dialog.showModal();
 };

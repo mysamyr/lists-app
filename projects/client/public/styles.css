@@ -111,14 +111,17 @@ ul {
 /*DIALOG*/
 dialog {
 	display: block;
-	min-width: 80%;
-	margin: auto;
 	background-color: var(--light-grey);
 	border: none;
 }
 
 dialog::backdrop {
 	background-color: hsla(0, 0%, 0%, 0.5);
+}
+
+.modal {
+	min-width: 80%;
+	margin: auto;
 }
 
 .dialog-modal {
@@ -145,6 +148,16 @@ dialog::backdrop {
 	height: 100vh;
 	width: 100%;
 	background-color: hsla(0, 0%, 0%, 0.5);
+}
+.tooltip {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	position: absolute;
+	right: 0;
+	padding: 5px;
+	background-color: var(--white);
+	border: 1px solid var(--black);
 }
 
 /*TEXT*/
@@ -180,7 +193,6 @@ input[type="checkbox"] {
 }
 
 .icon {
-	background-color: var(--white);
 	width: 34px;
 	height: 34px;
 	line-height: 34px;
@@ -209,7 +221,7 @@ input[type="checkbox"] {
 
 /*ANIMATIONS*/
 .slide-in {
-	animation-duration: 0.8s;
+	animation-duration: 0.5s;
 	animation-name: slidein;
 }
 @keyframes slidein {
@@ -221,7 +233,7 @@ input[type="checkbox"] {
 	}
 }
 .slide-out {
-	animation-duration: 0.8s;
+	animation-duration: 0.5s;
 	animation-name: slideout;
 }
 @keyframes slideout {

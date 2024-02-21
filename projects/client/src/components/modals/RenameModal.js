@@ -15,5 +15,6 @@ export default (name, onConfirm) => {
 	);
 
 	dialog.appendChild(form);
+	dialog.classList.add("modal");
 	dialog.showModal();
 };

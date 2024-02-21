@@ -160,4 +160,5 @@ export default async () => {
 		Header("ListerApp", true),
 		type === "list" ? await getCreateListForm() : getCreateListItemForm(),
 	);
+	document.querySelector("input")?.focus();
 };

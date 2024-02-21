@@ -15,5 +15,6 @@ export default (onConfirm) => {
 	});
 	container.append(paragraph, buttons);
 	dialog.appendChild(container);
+	dialog.classList.add("modal");
 	dialog.showModal();
 };

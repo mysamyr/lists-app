@@ -2,6 +2,7 @@ import { URLS } from "../constants";
 import listPage from "../pages/list";
 import createListPage from "../pages/create-list";
 import configsPage from "../pages/config";
+import loginPage from "../pages/login";
 import page404 from "../pages/404";
 import {
 	clearState,
@@ -14,6 +15,10 @@ export const render = async (path) => {
 	if (path === URLS.HOME || path === URLS.LISTS) {
 		clearState();
 		return listPage();
+	}
+	if (path === URLS.LOGIN) {
+		clearState();
+		return loginPage();
 	}
 	if (path === URLS.CONFIGS) {
 		clearState();

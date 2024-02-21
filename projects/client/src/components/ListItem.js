@@ -1,6 +1,6 @@
 import { navigate } from "../utils/navigator";
 import { URLS } from "../constants";
-import { getListData, pushBreadcrumbs } from "../store";
+import { getListData, getListItems, pushBreadcrumbs } from "../store";
 import { getView, showError } from "../utils/helpers";
 import {
 	createDiv,
@@ -20,21 +20,28 @@ const onClickListItem = async (e, data) => {
 	return navigate(path);
 };
 
-const onDeleteListItem = (e, id) => {
-	e.preventDefault();
-	e.stopPropagation();
-	const onConfirm = async () => {
+const onChangeCompleted = async ({ id, nameElement }) => {
+	const lists = getListItems();
+	let completed;
+	lists.forEach((item, idx) => {
+		if (item.id === id) {
+			lists[idx].completed = !lists[idx].completed;
+			completed = lists[idx].completed;
+		}
+	});
+	await putRequest(URLS.UPDATE_LIST_DETAILS_$(id), { completed });
+	nameElement.classList.toggle("completed");
+};
+
+const onDeleteListItem = ({ id }) =>
+	DeleteModal(async () => {
 		await deleteRequest(URLS.DELETE_LIST_ITEM_$(id));
 		const parentId = getListData()?.id;
 		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.HOME);
-	};
-	DeleteModal(onConfirm);
-};
+	});
 
-const onRenameListItem = (e, id, oldName) => {
-	e.preventDefault();
-	e.stopPropagation();
-	const onConfirm = async () => {
+const onRenameListItem = ({ id, name: oldName }) =>
+	RenameModal(oldName, async () => {
 		const form = document.querySelector("form");
 		const name = form.name.value.trim();
 		const err = validateName(name);
@@ -43,23 +50,69 @@ const onRenameListItem = (e, id, oldName) => {
 		await putRequest(URLS.DELETE_LIST_ITEM_$(id), { name });
 		const parentId = getListData()?.id;
 		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.HOME);
-	};
-	RenameModal(oldName, onConfirm);
+	});
+
+const getMenuOptions = ({ id, name, text: nameElement, completed }) => {
+	// rename, delete, todo move, copy
+	const config = [
+		{
+			text: "Rename",
+			func: onRenameListItem,
+		},
+		{
+			text: "Delete",
+			func: onDeleteListItem,
+		},
+	];
+	if (completed !== undefined) {
+		config.push({
+			text: "Change Completed",
+			func: onChangeCompleted,
+		});
+	}
+	const result = [];
+	config.forEach(({ text, func }) => {
+		const option = createDiv();
+		option.innerText = text;
+		onPressClick(
+			option,
+			() => {
+				document.querySelector(".tooltip").remove();
+				return func({ id, name, nameElement, completed });
+			},
+			{ once: true },
+		);
+		result.push(option);
+	});
+	return result;
 };
 
-const getButtons = (id, name) => {
-	const buttonsContainer = createDiv();
-	buttonsContainer.classList.add("btns");
-	const renameBtn = createDiv();
-	renameBtn.classList.add("icon");
-	renameBtn.innerHTML = "&#9998;";
-	const deleteBtn = createDiv();
-	deleteBtn.classList.add("icon");
-	deleteBtn.innerHTML = "&times;";
-	onPressClick(renameBtn, (e) => onRenameListItem(e, id, name));
-	onPressClick(deleteBtn, (e) => onDeleteListItem(e, id));
-	buttonsContainer.append(renameBtn, deleteBtn);
-	return buttonsContainer;
+const toggleOptionsTooltip = ({ e, id, name, text, completed }) => {
+	e.preventDefault();
+	e.stopPropagation();
+	const existingTooltip = document.querySelector(".tooltip");
+	if (existingTooltip) {
+		existingTooltip.remove();
+		if (existingTooltip.dataset.id === id) return;
+	}
+	const container = createDiv();
+	container.classList.add("tooltip");
+	container.dataset.id = id;
+	container.append(...getMenuOptions({ e, id, name, text, completed }));
+	document.querySelector("body").appendChild(container);
+	const offsetTop = e.target.offsetTop;
+	const heightOfElement = e.target.clientHeight;
+	container.style.cssText = `top: ${offsetTop + heightOfElement + 12}px;`;
+};
+
+const getOptionsButton = ({ id, name, text, completed }) => {
+	const button = createDiv();
+	button.classList.add("icon");
+	button.innerHTML = "︙";
+	onPressClick(button, (e) =>
+		toggleOptionsTooltip({ e, id, name, text, completed }),
+	);
+	return button;
 };
 
 export default (data, view) => {
@@ -77,7 +130,7 @@ export default (data, view) => {
 	}
 	text.innerText = isListItem ? getView(data, view) : name;
 	onPressClick(listItem, (e) => onClickListItem(e, data), { once: true });
-	listItem.append(text, getButtons(id, name));
+	listItem.append(text, getOptionsButton({ id, name, text, completed }));
 
 	return listItem;
 };

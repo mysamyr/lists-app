@@ -8,6 +8,10 @@ add possibility to edit fields (not only name/count/completed)
 refactoring
 create components for sidebar menu items
 add new page with fields
+add date type
+add docker compose
+add possibility to move and copy lists
+add simple snackbar
 
 -------------------------------------------------
 

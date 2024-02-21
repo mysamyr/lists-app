@@ -41,6 +41,8 @@ const determineFilePath = (url) => {
 			return "public/img/sort.svg";
 		case "/img/menu.svg":
 			return "public/img/menu.svg";
+		case "/img/options.svg":
+			return "public/img/options.svg";
 		default:
 			return "public/index.html";
 	}

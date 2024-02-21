@@ -1,5 +1,6 @@
 export const URLS = {
 	HOME: "/",
+	LOGIN: "/login",
 	LISTS: "/lists",
 	CONFIGS: "/configs",
 	LIST_REGEXP: /^\/lists\/[a-f\d]{24}$/,

@@ -3,6 +3,14 @@ import Button from "./buttons/Button";
 import { navigate } from "../utils/navigator";
 import { URLS } from "../constants";
 
+const closeSidebar = () => {
+	const sidebar = document.querySelector(".sidebar");
+	const backdrop = document.querySelector(".sidebar-backdrop");
+	backdrop.remove();
+	sidebar.classList.replace("slide-in", "slide-out");
+	setTimeout(() => sidebar.remove(), 450);
+};
+
 const renderMenuOptions = () => {
 	const activePage = history.state.path;
 	const config = [
@@ -22,18 +30,13 @@ const renderMenuOptions = () => {
 			onClick: () => {
 				if (!isActive) {
 					return navigate(url);
+				} else {
+					closeSidebar();
 				}
 			},
 			text,
-			color: isActive ? "gray" : "red",
 		});
 	});
-};
-
-const closeSidebar = (sidebar, backdrop) => {
-	backdrop.remove();
-	sidebar.classList.replace("slide-in", "slide-out");
-	setTimeout(() => sidebar.remove(), 775);
 };
 
 export default () => {
@@ -45,6 +48,6 @@ export default () => {
 	container.classList.add("dialog-modal");
 	container.append(...renderMenuOptions());
 	sidebar.appendChild(container);
-	onPressClick(backdrop, () => closeSidebar(sidebar, backdrop), { once: true });
+	onPressClick(backdrop, () => closeSidebar(), { once: true });
 	document.querySelector("body").append(backdrop, sidebar);
 };
