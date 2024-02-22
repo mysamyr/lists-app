@@ -3,7 +3,7 @@ import DropDown from "../DropDown";
 import { getBreadcrumbs, pushBreadcrumbs } from "../../store";
 import { navigate } from "../../utils/navigator";
 import { URLS } from "../../constants";
-// todo pass func from outside
+
 const onClick = (e) => {
 	if (!e.target.isOpened) {
 		const breadcrumbsStack = getBreadcrumbs();

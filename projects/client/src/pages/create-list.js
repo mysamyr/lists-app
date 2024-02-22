@@ -1,5 +1,5 @@
 import { getListData, getListItems, getParentData } from "../store";
-import { navigateBack } from "../utils/navigator";
+import { navigate, navigateBack } from "../utils/navigator";
 import { URLS } from "../constants";
 import {
 	NOT_UNIQUE_NAME,
@@ -45,7 +45,7 @@ const onSaveList = async () => {
 		return navigateBack();
 	}
 	await postRequest(URLS.CREATE_NEW_ENTRY_LIST, formData);
-	return navigateBack();
+	return navigate();
 };
 
 const onSaveListItem = async () => {

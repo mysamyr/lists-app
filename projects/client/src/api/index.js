@@ -5,7 +5,7 @@ const catchFunc = (e) => showError(e.message);
 const handleResponse = async (data) => {
 	if (!data.ok) {
 		const json = await data.json();
-		throw new Error(json.error);
+		throw new Error(json.message);
 	}
 };
 const handleJSONResponse = async (data) => {

@@ -22,10 +22,13 @@ module.exports = {
 	NO_SORT: "Неправильне поле для сортування",
 
 	// bad request
-	NO_ITEM: "Елемент не знайдено",
-	NOT_A_LIST: "Елемент не є списком",
-	NOT_UNIQUE_LIST_ITEM: "Елемент списку не унікальний",
+	NO_ITEM: "Element doesn't exist",
+	NOT_A_LIST: "Element is not a list",
+	NOT_UNIQUE_LIST_ITEM: "Element is not unique",
+	SAME_DESTINATION: "Destination list has not changed",
+	SAME_ITEM: "Destination list and current list cannot match",
 
 	FIELD_EXISTS: "Поле з такою назвою вже існує",
 	ELEMENT_IS_BEING_USED: "Елемент використовується",
+	RENAME_LIST: "List with this name already exists",
 };

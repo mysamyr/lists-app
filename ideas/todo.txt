@@ -10,8 +10,11 @@ create components for sidebar menu items
 add new page with fields
 add date type
 add docker compose
-add possibility to move and copy lists
+add possibility to move lists
 add simple snackbar
+
+add validate middlewares
+add drill down component
 
 -------------------------------------------------
 

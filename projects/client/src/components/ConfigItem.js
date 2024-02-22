@@ -4,7 +4,7 @@ import { navigate } from "../utils/navigator";
 
 const onClickItem = async (id) => navigate(URLS.GET_CONFIG_DETAILS(id));
 
-// todo add buttons
+// todo add actions
 
 export default (data) => {
 	const listItem = createListItem();

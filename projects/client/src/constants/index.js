@@ -8,10 +8,12 @@ export const URLS = {
 	NEW_LIST: "/lists/new",
 
 	GET_LISTS: "/lists",
+	GET_LISTS_TREE: "/lists/tree",
 	GET_LIST_DETAILS_$: (id) => `/lists/${id}`,
 	CREATE_NEW_ENTRY_LIST: "/lists",
 	CREATE_NEW_LIST_ITEM_$: (id) => `/lists/${id}`,
 	UPDATE_LIST_DETAILS_$: (id) => `/lists/${id}`,
+	MOVE_LIST_$: (id) => `/lists/${id}/move`,
 	DELETE_LIST_ITEM_$: (id) => `/lists/${id}`,
 
 	GET_CONFIGS: "/configs",

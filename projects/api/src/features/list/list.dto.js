@@ -7,4 +7,11 @@ module.exports = {
 			config,
 		};
 	},
+	listTreeDto(data) {
+		return {
+			id: data._id.toString(),
+			name: data.name,
+			children: data.children,
+		};
+	},
 };

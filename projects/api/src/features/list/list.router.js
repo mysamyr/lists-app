@@ -11,6 +11,13 @@ router.get(
 );
 
 router.get(
+	"/tree",
+	promisify(async (req, res) => {
+		res.status(OK).json(await listController.getListsTree());
+	}),
+);
+
+router.get(
 	"/:id",
 	promisify(async (req, res) => {
 		res.status(OK).json(await listController.getList(req.params.id));
@@ -39,6 +46,15 @@ router.put(
 	"/:id",
 	promisify(async (req, res) => {
 		await listController.update(req.params.id, req.body);
+
+		res.status(OK).send();
+	}),
+);
+
+router.put(
+	"/:id/move",
+	promisify(async (req, res) => {
+		await listController.move(req.params.id, req.body.destination);
 
 		res.status(OK).send();
 	}),

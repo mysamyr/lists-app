@@ -4,7 +4,7 @@ const { FIELDS, FIELD_TYPES } = require("../../constants/enums");
 const ListModel = require("../../models/list");
 const ConfigModel = require("../../models/config");
 const { getConfigData } = require("../config/config.service");
-const { getListData } = require("./list.service");
+const { getListWithData } = require("./list.service");
 const { validateName } = require("../../validators");
 
 const validateFields = (body, { fields }) => {
@@ -104,11 +104,11 @@ module.exports.validateUpdate = async (body, item, parent) => {
 		throw new Error(ERROR_MESSAGES.NO_DATA);
 	}
 	if (!parent) {
-		// change name for entry list
+		// changing name for entry list
 		validateName(body, { min: NAME_MIN_LENGTH, max: NAME_MAX_LENGTH });
 		return;
 	}
-	const parentData = await getListData(parent);
+	const parentData = await getListWithData(parent);
 
 	if (body.hasOwnProperty(FIELDS.COUNT)) {
 		const countConfig = parentData.config.fields.find(

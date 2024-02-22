@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../constants/status-codes");
 module.exports = class ApiError extends Error {
 	constructor(status, message) {
 		super(message);
@@ -5,10 +6,10 @@ module.exports = class ApiError extends Error {
 	}
 
 	static UnauthorizedError() {
-		return new ApiError(401);
+		return new ApiError(STATUS_CODES.UNAUTHORIZED, "Authorisation Error");
 	}
 
-	static BadRequest(message, error) {
-		return new ApiError(400, message, error);
+	static BadRequest(message) {
+		return new ApiError(STATUS_CODES.BAD_REQUEST, message);
 	}
 };

@@ -12,6 +12,7 @@ import DeleteModal from "./modals/DeleteModal";
 import { deleteRequest, putRequest } from "../api";
 import RenameModal from "./modals/RenameModal";
 import { validateName } from "../utils/validators";
+import MoveModal from "./modals/MoveModal";
 
 const onClickListItem = async (e, data) => {
 	e.preventDefault();
@@ -37,7 +38,7 @@ const onDeleteListItem = ({ id }) =>
 	DeleteModal(async () => {
 		await deleteRequest(URLS.DELETE_LIST_ITEM_$(id));
 		const parentId = getListData()?.id;
-		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.HOME);
+		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.LISTS);
 	});
 
 const onRenameListItem = ({ id, name: oldName }) =>
@@ -49,11 +50,25 @@ const onRenameListItem = ({ id, name: oldName }) =>
 		if (oldName === name) return showError("Name isn't changed");
 		await putRequest(URLS.DELETE_LIST_ITEM_$(id), { name });
 		const parentId = getListData()?.id;
-		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.HOME);
+		return navigate(parentId ? URLS.GET_LIST_DETAILS_$(parentId) : URLS.LISTS);
 	});
+const onMoveList = ({ id }) => {
+	MoveModal(async () => {
+		const destination = document.querySelector("form").destination.value;
+		if (id === destination) return showError("Cannot choose the same element");
+		await putRequest(URLS.MOVE_LIST_$(id), { destination });
 
-const getMenuOptions = ({ id, name, text: nameElement, completed }) => {
-	// rename, delete, todo move, copy
+		return navigate();
+	});
+};
+
+const getMenuOptions = ({
+	id,
+	name,
+	text: nameElement,
+	completed,
+	isListItem,
+}) => {
 	const config = [
 		{
 			text: "Rename",
@@ -68,6 +83,12 @@ const getMenuOptions = ({ id, name, text: nameElement, completed }) => {
 		config.push({
 			text: "Change Completed",
 			func: onChangeCompleted,
+		});
+	}
+	if (!isListItem) {
+		config.push({
+			text: "Move",
+			func: onMoveList,
 		});
 	}
 	const result = [];
@@ -87,7 +108,7 @@ const getMenuOptions = ({ id, name, text: nameElement, completed }) => {
 	return result;
 };
 
-const toggleOptionsTooltip = ({ e, id, name, text, completed }) => {
+const toggleOptionsTooltip = ({ e, id, name, text, completed, isListItem }) => {
 	e.preventDefault();
 	e.stopPropagation();
 	const existingTooltip = document.querySelector(".tooltip");
@@ -98,19 +119,21 @@ const toggleOptionsTooltip = ({ e, id, name, text, completed }) => {
 	const container = createDiv();
 	container.classList.add("tooltip");
 	container.dataset.id = id;
-	container.append(...getMenuOptions({ e, id, name, text, completed }));
+	container.append(
+		...getMenuOptions({ e, id, name, text, completed, isListItem }),
+	);
 	document.querySelector("body").appendChild(container);
 	const offsetTop = e.target.offsetTop;
 	const heightOfElement = e.target.clientHeight;
 	container.style.cssText = `top: ${offsetTop + heightOfElement + 12}px;`;
 };
 
-const getOptionsButton = ({ id, name, text, completed }) => {
+const getOptionsButton = ({ id, name, text, completed, isListItem }) => {
 	const button = createDiv();
 	button.classList.add("icon");
 	button.innerHTML = "︙";
 	onPressClick(button, (e) =>
-		toggleOptionsTooltip({ e, id, name, text, completed }),
+		toggleOptionsTooltip({ e, id, name, text, completed, isListItem }),
 	);
 	return button;
 };
@@ -130,7 +153,10 @@ export default (data, view) => {
 	}
 	text.innerText = isListItem ? getView(data, view) : name;
 	onPressClick(listItem, (e) => onClickListItem(e, data), { once: true });
-	listItem.append(text, getOptionsButton({ id, name, text, completed }));
+	listItem.append(
+		text,
+		getOptionsButton({ id, name, text, completed, isListItem }),
+	);
 
 	return listItem;
 };

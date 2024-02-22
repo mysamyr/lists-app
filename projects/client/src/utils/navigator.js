@@ -39,7 +39,7 @@ export const render = async (path) => {
 };
 
 export const navigate = async (path = URLS.LISTS) => {
-	window.history.pushState({ path }, path, path);
+	window.history.pushState({ path }, "", path);
 	return render(path);
 };
 
@@ -56,7 +56,7 @@ export const navigateBack = async () => {
 	}
 	const id = getListData().id;
 	const url = URLS.GET_LIST_DETAILS_$(id);
-	history.pushState({ path: url }, "");
+	history.pushState({ path: url }, "", url);
 	return render(url);
 };
 

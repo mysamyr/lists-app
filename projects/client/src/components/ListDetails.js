@@ -10,9 +10,9 @@ import Button from "./buttons/Button";
 
 const changeCount = async (id, count, fields) => {
 	const countConfig = fields.find((i) => i.name === "count");
-	if (countConfig.min && count < countConfig.min)
+	if (countConfig.hasOwnProperty("min") && count < countConfig.min)
 		return showError(COUNT_TOO_LOW);
-	if (countConfig.max && count > countConfig.max)
+	if (countConfig.hasOwnProperty("max") && count > countConfig.max)
 		return showError(COUNT_TOO_HIGH);
 	await putRequest(URLS.UPDATE_LIST_DETAILS_$(id), { count });
 	const lists = getListItems();

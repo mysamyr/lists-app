@@ -1,8 +1,10 @@
 const ConfigModel = require("../../models/config");
+const ListModel = require("../../models/list");
 const { listDto } = require("./list.dto");
 const { getConfigData, getConfigsData } = require("../config/config.service");
+const { RENAME_LIST } = require("../../constants/error-messages");
 
-module.exports.getListData = async (list) => {
+module.exports.getListWithData = async (list) => {
 	if (!list.config) {
 		return list;
 	}
@@ -11,7 +13,7 @@ module.exports.getListData = async (list) => {
 	return listDto(list, configWithFields);
 };
 
-module.exports.getLists = async (lists) => {
+module.exports.getListsWithData = async (lists) => {
 	const configIds = lists.reduce((acc, list) => {
 		if (list.config) {
 			acc.push(list.config);
@@ -28,4 +30,14 @@ module.exports.getLists = async (lists) => {
 	return lists.map((item) =>
 		item.config ? listDto(item, configMap[item.config.toString()]) : item,
 	);
+};
+
+module.exports.checkForDuplicateName = async (listIds, name) => {
+	const siblings = listIds
+		? await ListModel.list(listIds)
+		: await ListModel.getEntryLists();
+	if (siblings.find((i) => i.name === name)) {
+		// todo possible rename list instead of throwing error
+		throw new Error(RENAME_LIST);
+	}
 };

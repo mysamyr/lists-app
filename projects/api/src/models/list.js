@@ -1,11 +1,41 @@
 const { ObjectId } = require("mongodb");
 const db = require("../services/database");
 const { stringifyObjectId } = require("../utils/helper");
+const { listTreeDto } = require("../features/list/list.dto");
 
 class ListModel {
 	async getEntryLists() {
 		const lists = await db.listItems.find({ isEntry: true }).toArray();
 		return lists.map(stringifyObjectId);
+	}
+
+	async getListsByIds(ids) {
+		const lists = await db.listItems
+			.find({ _id: { $in: ids }, children: { $exists: true } })
+			.toArray();
+		return lists.map(listTreeDto);
+	}
+
+	async _getListsRec(arr) {
+		if (!arr.length) {
+			return;
+		}
+		const res = [];
+		for (const list of arr) {
+			const lists = await this.getListsByIds(list.children);
+			const children = await this._getListsRec(lists);
+			res.push({
+				id: list.id,
+				name: list.name,
+				children,
+			});
+		}
+		return res;
+	}
+
+	async getListsTree() {
+		const lists = await this.getEntryLists();
+		return this._getListsRec(lists);
 	}
 
 	async getById(id) {
@@ -65,6 +95,13 @@ class ListModel {
 
 	async update(id, body) {
 		await db.listItems.updateOne({ _id: new ObjectId(id) }, { $set: body });
+	}
+
+	async linkToParent(id, parentId) {
+		await db.listItems.updateOne(
+			{ _id: new ObjectId(parentId) },
+			{ $push: { children: new ObjectId(id) } },
+		);
 	}
 
 	async unlinkFromParent(id) {
