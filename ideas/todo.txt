@@ -1,11 +1,21 @@
-rewrite css default selectors to classes
+fix breadcrumbs issue on entering specific list url - fixed by redirecting to list/config page
 
-add sorting on the client
+-------------------------------------------------
 
-add create feature for lists - create diagram with steps
-
-? add possibility to not show some fields (fields.show: bool) - reason???
-? change list configuration
 add authorisation
+add config pages
+add possibility to edit fields (not only name/count/completed)
+refactoring
+create components for sidebar menu items
+add new page with fields
+add date type
+add docker compose
+add possibility to move lists
+add simple snackbar
 
-* analyze and brainstorm repetitive todo lists feature
+add validate middlewares
+add drill down component
+
+-------------------------------------------------
+
+Архітектура = Синтаксис (код) + сутності (класи/фічі/компонеенти) + конфігурація (eslint, husky, prettier)

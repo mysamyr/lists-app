@@ -1,25 +1,19 @@
-### Renderers
+### Lists
 
-`GET /` - render home page <br/>
-`GET /create-list-page` - render create list page <br/>
-`GET /list-page/:id` - render specific list <br/>
-`GET /print-list/:id` - render list's compact view <br/>
+- `GET /lists` - get entry lists
+- `GET /lists/:id` - get list children/list item details
+- `POST /lists/:id?` - create new list/list item
+- `PUT /lists/:id` - update list/list item
+- `DELETE /lists/:id` - delete list
 
-### List
+### Configs
 
-`GET /list` - get list of lists <br/>
-`POST /list` - create new list <br/>
-`PUT /list/:id` - rename list <br/>
-`DELETE /list/:id` - delete list <br/>
+- `GET /configs` - get all configs
+- `POST /configs` - create new config
+- `DELETE /configs/:id` - delete config
 
-### List item
+### Fields
 
-`GET /list/:id` - get list details <br/>
-`POST /list/:id` - create new list item <br/>
-`PUT /list/:listId/item/:id` - update list item <br/>
-`DELETE /list/:listId/item/:id` - delete list item <br/>
-
-### Other
-
-\*`GET /audits/:id` - get audits for list (JSON) <br/>
-`GET /:file` - get file (CSS, JS, favicon) <br/>
+- `GET /fields` - get all fields
+- `POST /fields` - create new field
+- `DELETE /fields/:id` - delete field

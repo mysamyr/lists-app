@@ -1,53 +1,33 @@
-const simpleList = {
+const List = {
 	_id: "ObjectId",
-	name: "ListName",
-	type: 1,
-	created: "Date.toJSON()",
-	data: [
-		{
-			id: "ObjectId",
-			name: "list item message",
-		},
-	],
+	name: "string",
+	isEntry: "boolean",
+	config: "ObjectId",
+	children: ["ObjectIds"],
 };
-const todoList = {
+const ListItem = {
 	_id: "ObjectId",
-	name: "ListName",
-	type: 2,
-	created: "Date.toJSON()",
-	data: [
-		{
-			id: "ObjectId",
-			name: "list item message",
-			complete: true,
-		},
-	],
+	name: "string",
+	completed: "boolean",	// ?
+	count: "number",			// ?
+	_: "other fields according to list's config"	// ?
 };
-const complexList = {
+
+const Config = {
 	_id: "ObjectId",
-	name: "ListName",
-	type: 3,
-	created: "Date.toJSON()",
-	data: [
-		{
-			id: "ObjectId",
-			name: "list item name",
-			count: 42, // optional
-			// other fields according to `fields` configuration
-		},
-	],
-	view: "{name} schema for list view...",
-	printView: "{name} schema for print view...",
-	fields: [
-		{
-			name: "db field name",
-			description: "field view name",
-			type: "string | number",
-			min: 3,
-			max: 99,
-			prefix: "prefix for field display", // optional
-			postfix: "postfix for field display", // optional
-		},
-	],
-	sort: "field name for sorting", // optional
+	name: "string",
+	sort: "string",
+	view: "string",
+	fields: ["ObjectIds"],
+}
+
+const Field = {
+	_id: "ObjectId",
+	name: "string",
+	description: "string",
+	type: "string",			// str/num/bool
+	min: "number",			// ?
+	max: "number",			// ?
+	prefix: "string",		// ?
+	postfix: "string",	// ?
 };
