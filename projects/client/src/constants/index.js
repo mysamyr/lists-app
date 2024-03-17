@@ -6,6 +6,11 @@ export const URLS = {
 	LIST_REGEXP: /^\/lists\/[a-f\d]{24}$/,
 	CONFIG_REGEXP: /^\/configs\/[a-f\d]{24}$/,
 	NEW_LIST: "/lists/new",
+	ERROR: "/error",
+
+	SIGNIN: "/auth/login",
+	SIGNUP: "/auth/signup",
+	REFRESH: "/auth/refresh",
 
 	GET_LISTS: "/lists",
 	GET_LISTS_TREE: "/lists/tree",

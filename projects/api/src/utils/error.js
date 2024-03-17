@@ -9,6 +9,10 @@ module.exports = class ApiError extends Error {
 		return new ApiError(STATUS_CODES.UNAUTHORIZED, "Authorisation Error");
 	}
 
+	static ForbiddenError() {
+		return new ApiError(STATUS_CODES.FORBIDDEN, "Forbidden");
+	}
+
 	static BadRequest(message) {
 		return new ApiError(STATUS_CODES.BAD_REQUEST, message);
 	}

@@ -2,6 +2,18 @@ module.exports.stringifyObjectId = ({ _id: id, ...rest }) => ({
 	id: id.toString(),
 	...rest,
 });
+module.exports.stringifyObjectIds = ({ _id: id, ...rest }, keys = []) => {
+	const stringifiedFields = keys.reduce((acc, key) => {
+		acc[key] = rest[key] && rest[key].toString();
+		return acc;
+	}, {});
+
+	return {
+		id: id.toString(),
+		...rest,
+		...stringifiedFields,
+	};
+};
 
 module.exports.getViewFields = (schema) => {
 	let result = [];

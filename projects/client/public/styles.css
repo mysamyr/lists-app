@@ -219,6 +219,10 @@ input[type="checkbox"] {
 	background-color: var(--grey);
 }
 
+.blue {
+	background-color: var(--light-blue);
+}
+
 /*ANIMATIONS*/
 .slide-in {
 	animation-duration: 0.5s;

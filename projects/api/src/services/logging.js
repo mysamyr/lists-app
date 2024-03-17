@@ -1,3 +1,5 @@
+const { dateTime } = require("../utils/date");
+
 module.exports.requestLogger = (req) => {
 	// eslint-disable-next-line no-console
 	console.log({
@@ -6,7 +8,7 @@ module.exports.requestLogger = (req) => {
 			url: req.url,
 			method: req.method,
 			body: req.body,
-			timestamp: new Date().toISOString(),
+			timestamp: dateTime(),
 		}),
 	});
 };
@@ -16,7 +18,7 @@ module.exports.errorLogger = (error) => {
 	console.error(
 		JSON.stringify({
 			error,
-			timestamp: new Date().toISOString(),
+			timestamp: dateTime(),
 		}),
 	);
 };

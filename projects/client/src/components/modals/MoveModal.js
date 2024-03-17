@@ -50,11 +50,16 @@ export default async (onConfirm) => {
 	form.classList.add("dialog-modal");
 	const header = createParagraph();
 	header.innerText = "Select list to move to:";
-	form.append(
-		header,
-		...(await getListsTree()),
-		Buttons({ confirmText: "Select", onConfirm, once: false }),
-	);
+	try {
+		const listsTree = await getListsTree();
+		form.append(
+			header,
+			...listsTree,
+			Buttons({ confirmText: "Select", onConfirm, once: false }),
+		);
+	} catch {
+		return;
+	}
 
 	dialog.appendChild(form);
 	dialog.classList.add("modal");

@@ -4,6 +4,7 @@ const List = {
 	isEntry: "boolean",
 	config: "ObjectId",
 	children: ["ObjectIds"],
+	owner: "ObjectId"
 };
 const ListItem = {
 	_id: "ObjectId",
@@ -30,4 +31,18 @@ const Field = {
 	max: "number",			// ?
 	prefix: "string",		// ?
 	postfix: "string",	// ?
+};
+
+const User = {
+	_id: "ObjectId",
+	email: "string",
+	passwordHash: "string",
+	role: "string", // a (admin), u (user), n (newbie)
+	activationLink: "string"
+};
+
+const Token = {
+	_id: "ObjectId",
+	token: "string",
+	userId: "ObjectId"
 };

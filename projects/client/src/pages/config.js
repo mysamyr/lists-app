@@ -8,27 +8,29 @@ import ConfigDetails from "../components/ConfigDetails";
 import ConfigItem from "../components/ConfigItem";
 import { sortByValue } from "../utils/helpers";
 import { getConfigsList, setConfigsList } from "../store";
-import AddButton from "../components/buttons/AddButton";
+import { navigate } from "../utils/navigator";
 
 export default async (id) => {
 	const isHomePage = !id;
 	const body = document.querySelector("body");
 	if (isHomePage) {
-		const configs = await getRequest(URLS.GET_CONFIGS);
-		if (!configs) return;
-		setConfigsList(configs);
-		body.innerText = "";
-		body.appendChild(Header("Configs"));
-		body.append(
-			List(sortByValue(configs), ConfigItem),
-			MarginBottom(),
-			AddButton(),
-		);
-		Dialog(body);
+		try {
+			const configs = await getRequest(URLS.GET_CONFIGS);
+			setConfigsList(configs);
+			body.innerText = "";
+			body.appendChild(Header({ title: "Configs", left: "menu" }));
+			body.append(List(sortByValue(configs), ConfigItem), MarginBottom());
+			Dialog(body);
+		} catch {
+			return await navigate(URLS.ERROR);
+		}
 	} else {
 		const configList = getConfigsList();
 		const configDetails = configList.find((i) => i.id === id);
 		body.innerText = "";
-		body.append(Header(configDetails.name, true), ConfigDetails(configDetails));
+		body.append(
+			Header({ title: configDetails.name, left: "back" }),
+			ConfigDetails(configDetails),
+		);
 	}
 };

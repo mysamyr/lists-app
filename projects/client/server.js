@@ -1,6 +1,7 @@
-const { createServer } = require("http");
+const { createServer, get } = require("http");
 const { extname } = require("path");
 const { readFileSync } = require("fs");
+const { API_URL } = require("./env.json");
 
 const port = process.env.PORT || 3000;
 
@@ -49,6 +50,28 @@ const determineFilePath = (url) => {
 };
 
 const server = createServer((req, res) => {
+	if (req.url.includes("activate")) {
+		return get(`${API_URL}${req.url}`, { method: "GET" }, (response) => {
+			if (response.statusCode !== 200) {
+				res.writeHead(401, { "Content-Type": "text/html" });
+				return res.end(
+					`<h1>Activation link is not valid.</h1><div onclick="location.href='/'" style="color: #71b6f6">Back to the main page</div>`,
+				);
+			}
+			res.writeHead(200, { "Content-Type": "text/html" });
+			return res.end(
+				`<h1>Congratulation!</h1><h2>Your account was activated.</h2><p>To continue use Lister App, <div onclick="location.href='/'" style="color: #71b6f6">go to website</div>.</p>`,
+			);
+		}).on("error", (err) => {
+			// eslint-disable-next-line no-console
+			console.error(err);
+			res.writeHead(500, { "Content-Type": "text/html" });
+			return res.end(
+				`<h1>Internal Server Error</h1><div onclick="location.href='/'" style="color: #71b6f6">Back to the main page</div>`,
+			);
+		});
+	}
+
 	const filePath = determineFilePath(req.url);
 	const contentType = determineContentType(req.url);
 
