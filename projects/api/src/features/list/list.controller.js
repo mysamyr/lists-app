@@ -6,20 +6,24 @@ const {
 	NOT_A_LIST,
 	SAME_DESTINATION,
 	SAME_ITEM,
+	INSUFFICIENT_PERMISSION,
 } = require("../../constants/error-messages");
 const { validateCreate, validateUpdate } = require("./list.validators");
 
-module.exports.getLists = async () => {
-	const lists = await ListModel.getEntryLists();
+module.exports.getLists = async (userId) => {
+	const lists = await ListModel.getEntryLists(userId);
 	return listService.getListsWithData(lists);
 };
 
-module.exports.getListsTree = async () => ListModel.getListsTree();
+module.exports.getListsTree = async (userId) => ListModel.getListsTree(userId);
 
-module.exports.getList = async (id) => {
+module.exports.getListsChildren = async (id, userId) => {
 	const parent = await ListModel.getById(id);
 	if (!parent) {
 		throw BadRequest(NO_ITEM);
+	}
+	if (parent.owner !== userId) {
+		throw BadRequest(INSUFFICIENT_PERMISSION);
 	}
 	if (!parent.children) {
 		return parent;
@@ -29,37 +33,46 @@ module.exports.getList = async (id) => {
 	return listService.getListsWithData(children);
 };
 
-module.exports.create = async (id, body) => {
+module.exports.create = async (id, body, userId) => {
 	// id is for not entry items
 	if (id) {
 		const parent = await ListModel.getById(id);
 		if (parent && !parent.children) {
 			throw BadRequest(NOT_A_LIST);
 		}
+		if (parent.owner !== userId) {
+			throw BadRequest(INSUFFICIENT_PERMISSION);
+		}
 		await validateCreate(body, parent);
-		return ListModel.createListItem(parent.id, body);
+		return ListModel.createListItem(parent.id, body, userId);
 	}
 	await validateCreate(body);
-	return ListModel.createEntry(body);
+	return ListModel.createEntry(body, userId);
 };
 
-module.exports.update = async (id, body) => {
+module.exports.update = async (id, body, userId) => {
 	const item = await ListModel.getById(id);
 	if (!item) {
 		throw BadRequest(NO_ITEM);
+	}
+	if (item.owner !== userId) {
+		throw BadRequest(INSUFFICIENT_PERMISSION);
 	}
 	const parent = await ListModel.getParent(id);
 	await validateUpdate(body, item, parent);
 	await ListModel.update(id, body);
 };
 
-module.exports.move = async (id, destination) => {
+module.exports.move = async (id, destination, userId) => {
 	if (id === destination) {
 		throw BadRequest(SAME_ITEM);
 	}
 	const item = await ListModel.getById(id);
 	if (!item) {
 		throw BadRequest(NO_ITEM);
+	}
+	if (item.owner !== userId) {
+		throw BadRequest(INSUFFICIENT_PERMISSION);
 	}
 	if (destination) {
 		// not to the entry
@@ -91,10 +104,13 @@ module.exports.move = async (id, destination) => {
 	}
 };
 
-module.exports.delete = async (id) => {
+module.exports.delete = async (id, userId) => {
 	const item = await ListModel.getById(id);
 	if (!item) {
 		throw BadRequest(NO_ITEM);
+	}
+	if (item.owner !== userId) {
+		throw BadRequest(INSUFFICIENT_PERMISSION);
 	}
 	if (!item.isEntry) {
 		await ListModel.unlinkFromParent(id);

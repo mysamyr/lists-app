@@ -14,6 +14,7 @@ import {
 } from "../store";
 import AddButton from "../components/buttons/AddButton";
 import ListItem from "../components/ListItem";
+import { navigate } from "../utils/navigator";
 
 const getBottomMargin = () => {
 	const marginBottom = createDiv();
@@ -49,28 +50,34 @@ export default async (id) => {
 	const listItems = getListItems();
 	const listDetails = listItems.find((i) => i.id === id && !i.config);
 	if (isHomePage || !listDetails) {
-		const lists = await getRequest(
-			isHomePage ? URLS.GET_LISTS : URLS.GET_LIST_DETAILS_$(id),
-		);
-		if (!lists) return;
-		setListItems(lists);
-		body.innerText = "";
-		const currentListData = getListData();
-		body.append(
-			Header(
-				isHomePage ? "Lists" : currentListData.name,
-				!isHomePage,
-				!isHomePage,
-			),
-		);
-		if (!isHomePage) {
-			body.append(Breadcrumbs());
+		try {
+			const lists = await getRequest(
+				isHomePage ? URLS.GET_LISTS : URLS.GET_LIST_DETAILS_$(id),
+			);
+			setListItems(lists);
+			body.innerText = "";
+			const currentListData = getListData();
+			body.append(
+				Header({
+					title: isHomePage ? "Lists" : currentListData.name,
+					left: !isHomePage ? "back" : "menu",
+					withSort: !isHomePage,
+				}),
+			);
+			if (!isHomePage) {
+				body.append(Breadcrumbs());
+			}
+			renderList(body, lists);
+			renderDialog(body);
+		} catch {
+			return navigate(URLS.ERROR);
 		}
-		renderList(body, lists);
-		renderDialog(body);
 	} else {
 		body.innerText = "";
-		body.append(Header(listDetails.name, true), Breadcrumbs());
+		body.append(
+			Header({ title: listDetails.name, left: "back" }),
+			Breadcrumbs(),
+		);
 		renderListDetails(body, listDetails);
 	}
 };

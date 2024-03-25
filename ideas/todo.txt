@@ -1,20 +1,23 @@
-fix breadcrumbs issue on entering specific list url - fixed by redirecting to list/config page
+breadcrumbs issue on entering specific list url - fixed by redirecting to list/config page
 
 -------------------------------------------------
 
-add authorisation
+add custom catch for api calls
+add user's own lists
 add config pages
 add possibility to edit fields (not only name/count/completed)
 refactoring
-create components for sidebar menu items
 add new page with fields
-add date type
-add docker compose
-add possibility to move lists
-add simple snackbar
 
-add validate middlewares
-add drill down component
+add docker compose
+
+add validate middlewares !!!!!!!!!!!!!!
+
+check for access for each list
+
+add "shared_with" fields to each list
+display all shared lists for "watchers" as entry lists
+add possibility to only watch or also edit lists (forbid deleting and moving)
 
 -------------------------------------------------
 

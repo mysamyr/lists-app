@@ -6,16 +6,21 @@
   "scripts": {
     "start": "node index.js",
     "start:dev": "nodemon index.js",
-    "create-lists": "node scripts/copy-lists.js"
+    "migration": "node scripts/migration.js"
   },
   "keywords": [],
   "author": "Mysamyr",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.1",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
-    "mongodb": "^5.8.1"
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^5.8.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

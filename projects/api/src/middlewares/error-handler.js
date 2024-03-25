@@ -10,7 +10,7 @@ module.exports = (err, req, res, next) => {
 		errorLogger(err.message);
 		return res.status(err.status).json({ message: err.message });
 	}
-	errorLogger("Unexpected error");
+	errorLogger(err.message);
 	return res
 		.status(STATUS_CODES.INTERNAL_SERVER_ERROR)
 		.json({ message: "Unexpected error" });

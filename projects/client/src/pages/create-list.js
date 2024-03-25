@@ -157,7 +157,7 @@ export default async () => {
 	const body = document.querySelector("body");
 	body.innerText = "";
 	body.append(
-		Header("ListerApp", true),
+		Header({ title: "ListerApp", left: "back" }),
 		type === "list" ? await getCreateListForm() : getCreateListItemForm(),
 	);
 	document.querySelector("input")?.focus();

@@ -2,6 +2,7 @@ import { createDiv, onPressClick } from "../utils/dom";
 import Button from "./buttons/Button";
 import { navigate } from "../utils/navigator";
 import { URLS } from "../constants";
+import { removeValue } from "../utils/local-storage";
 
 const closeSidebar = () => {
 	const sidebar = document.querySelector(".sidebar");
@@ -13,7 +14,7 @@ const closeSidebar = () => {
 
 const renderMenuOptions = () => {
 	const activePage = history.state.path;
-	const config = [
+	const links = [
 		{
 			text: "Lists",
 			url: URLS.LISTS,
@@ -22,19 +23,29 @@ const renderMenuOptions = () => {
 			text: "Configs",
 			url: URLS.CONFIGS,
 		},
+		{
+			text: "Logout",
+			url: URLS.LOGIN,
+			fn: () => {
+				removeValue("token");
+			},
+			color: "red",
+		},
 	];
-	return config.map(({ text, url }) => {
+	return links.map(({ text, url, fn, color }) => {
 		const isActive = activePage === url;
 
 		return Button({
 			onClick: () => {
 				if (!isActive) {
+					fn && fn();
 					return navigate(url);
 				} else {
 					closeSidebar();
 				}
 			},
 			text,
+			color,
 		});
 	});
 };

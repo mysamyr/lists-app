@@ -19,7 +19,7 @@ module.exports = {
 	NO_PRINT_VIEW:
 		"Відсутня схема відображення компактного списку (printView: string)",
 	NO_FIELDS: "Відсутня схема полів списку (fields: object[])",
-	NO_SORT: "Неправильне поле для сортування",
+	NO_SORT: "Incorrect field for sorting",
 
 	// bad request
 	NO_ITEM: "Element doesn't exist",
@@ -27,8 +27,11 @@ module.exports = {
 	NOT_UNIQUE_LIST_ITEM: "Element is not unique",
 	SAME_DESTINATION: "Destination list has not changed",
 	SAME_ITEM: "Destination list and current list cannot match",
+	INSUFFICIENT_PERMISSION: "You don't have permission to this list",
+	ACTIVATE_ACCOUNT: "Activate your account with link from your email",
 
-	FIELD_EXISTS: "Поле з такою назвою вже існує",
-	ELEMENT_IS_BEING_USED: "Елемент використовується",
+	FIELD_EXISTS: "Field with the same name already exists",
+	ELEMENT_IS_BEING_USED: "Element is in use",
 	RENAME_LIST: "List with this name already exists",
+	INCORRECT_ACTIVATION_LINK: "Activation link is incorrect",
 };

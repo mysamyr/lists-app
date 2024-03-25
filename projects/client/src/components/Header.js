@@ -16,9 +16,12 @@ const onClickSort = () => {
 	});
 };
 
-const leftContent = (withBack) => {
-	const id = withBack ? "back" : "menu";
+const leftContent = (id) => {
 	const container = createDiv();
+	if (!id) {
+		return container;
+	}
+	const withBack = id === "back";
 	container.id = id;
 	if (withBack) {
 		onPressClick(container, navigateBack, { once: true });
@@ -36,18 +39,16 @@ const rightContent = (withSort) => {
 		rightContainer.id = "sort";
 		onPressClick(rightContainer, onClickSort);
 		rightContainer.innerHTML = `<img src="/img/sort.svg" height="20" alt="sort"/>`;
-	} else {
-		rightContainer.style.width = "44px";
 	}
 	return rightContainer;
 };
 
-export default (title, withBack = false, withSort = false) => {
+export default ({ title, left, withSort = false }) => {
 	const container = createDiv();
 	container.classList.add("row", "header");
 	const header = createHeader1();
 	header.innerText = title.length > 25 ? title.slice(0, 26) + "..." : title;
-	container.append(leftContent(withBack), header, rightContent(withSort));
+	container.append(leftContent(left), header, rightContent(withSort));
 
 	return container;
 };

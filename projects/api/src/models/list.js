@@ -1,12 +1,14 @@
 const { ObjectId } = require("mongodb");
 const db = require("../services/database");
-const { stringifyObjectId } = require("../utils/helper");
+const { stringifyObjectIds } = require("../utils/helper");
 const { listTreeDto } = require("../features/list/list.dto");
 
 class ListModel {
-	async getEntryLists() {
-		const lists = await db.listItems.find({ isEntry: true }).toArray();
-		return lists.map(stringifyObjectId);
+	async getEntryLists(userId) {
+		const lists = await db.listItems
+			.find({ isEntry: true, owner: new ObjectId(userId) })
+			.toArray();
+		return lists.map((list) => stringifyObjectIds(list, ["owner"]));
 	}
 
 	async getListsByIds(ids) {
@@ -33,42 +35,43 @@ class ListModel {
 		return res;
 	}
 
-	async getListsTree() {
-		const lists = await this.getEntryLists();
+	async getListsTree(userId) {
+		const lists = await this.getEntryLists(userId);
 		return this._getListsRec(lists);
 	}
 
 	async getById(id) {
 		const item = await db.listItems.findOne({ _id: new ObjectId(id) });
-		return item && stringifyObjectId(item);
+		return item && stringifyObjectIds(item, ["owner"]);
 	}
 
 	async getByConfigId(id) {
 		const item = await db.listItems.findOne({ config: new ObjectId(id) });
-		return item && stringifyObjectId(item);
+		return item && stringifyObjectIds(item, ["owner"]);
 	}
 
 	async getParent(id) {
 		const item = await db.listItems.findOne({ children: new ObjectId(id) });
-		return item && stringifyObjectId(item);
+		return item && stringifyObjectIds(item, ["owner"]);
 	}
 
 	async list(ids) {
 		const lists = await db.listItems.find({ _id: { $in: ids } }).toArray();
-		return lists.map(stringifyObjectId);
+		return lists.map((list) => stringifyObjectIds(list, ["owner"]));
 	}
 
-	async createEntry(data) {
+	async createEntry(data, userId) {
 		await db.listItems.insertOne({
 			_id: new ObjectId(),
 			isEntry: true,
 			children: [],
 			name: data.name,
 			config: new ObjectId(data.config),
+			owner: new ObjectId(userId),
 		});
 	}
 
-	async createListItem(parentId, data) {
+	async createListItem(parentId, data, userId) {
 		const newId = new ObjectId();
 		const isList = data.config;
 		let updateData;
@@ -79,6 +82,7 @@ class ListModel {
 				children: [],
 				name: data.name,
 				config: new ObjectId(data.config),
+				owner: new ObjectId(userId),
 			};
 		} else {
 			updateData = {

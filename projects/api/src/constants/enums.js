@@ -18,3 +18,9 @@ module.exports.FIELD_TYPES = {
 	NUMBER: "number",
 	BOOLEAN: "boolean",
 };
+
+module.exports.USER_ROLES = {
+	ADMIN: "a",
+	USER: "u",
+	NEWBIE: "n",
+};
